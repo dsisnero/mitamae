@@ -49,39 +49,67 @@ module MItamae
       end
 
       def install_package_on_windows(name, version, options)
-        # Try to use Chocolatey if available
-        if check_command('where choco')
-          args = ['install', name, '-y']
-          args << '--version' << version if version
-          args << options if options
-          run_command(['choco'] + args)
-        # Fall back to winget if available (Windows 10+)
+        provider = desired.provider&.to_sym
+
+        # Use specified provider if given
+        if provider == :chocolatey
+          install_with_chocolatey(name, version, options)
+        elsif provider == :winget
+          install_with_winget(name, version, options)
+        # Otherwise try to use available package managers in order
+        elsif check_command('where choco')
+          install_with_chocolatey(name, version, options)
         elsif check_command('where winget')
-          args = ['install', '--accept-source-agreements', '--accept-package-agreements', '-e', name]
-          args << '--version' << version if version
-          args << options if options
-          run_command(['winget'] + args)
+          install_with_winget(name, version, options)
         else
           # Fall back to specinfra's implementation
           run_specinfra(:install_package, name, version, options)
         end
       end
 
+      def install_with_chocolatey(name, version, options)
+        args = ['install', name, '-y']
+        args << '--version' << version if version
+        args << options if options
+        run_command(['choco'] + args)
+      end
+
+      def install_with_winget(name, version, options)
+        args = ['install', '--accept-source-agreements', '--accept-package-agreements', '-e', name]
+        args << '--version' << version if version
+        args << options if options
+        run_command(['winget'] + args)
+      end
+
       def remove_package_on_windows(name, options)
-        # Try to use Chocolatey if available
-        if check_command('where choco')
-          args = ['uninstall', name, '-y']
-          args << options if options
-          run_command(['choco'] + args)
-        # Fall back to winget if available
+        provider = desired.provider&.to_sym
+
+        # Use specified provider if given
+        if provider == :chocolatey
+          remove_with_chocolatey(name, options)
+        elsif provider == :winget
+          remove_with_winget(name, options)
+        # Otherwise try to use available package managers in order
+        elsif check_command('where choco')
+          remove_with_chocolatey(name, options)
         elsif check_command('where winget')
-          args = ['uninstall', '--accept-source-agreements', '-e', name]
-          args << options if options
-          run_command(['winget'] + args)
+          remove_with_winget(name, options)
         else
           # Fall back to specinfra's implementation
           run_specinfra(:remove_package, name, options)
         end
+      end
+
+      def remove_with_chocolatey(name, options)
+        args = ['uninstall', name, '-y']
+        args << options if options
+        run_command(['choco'] + args)
+      end
+
+      def remove_with_winget(name, options)
+        args = ['uninstall', '--accept-source-agreements', '-e', name]
+        args << options if options
+        run_command(['winget'] + args)
       end
     end
   end
