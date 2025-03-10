@@ -81,6 +81,14 @@ task 'test:integration' do
   end
 end
 
+desc 'run Windows serverspec tests'
+task 'test:windows' do
+  Dir.chdir(__dir__) do
+    sh 'bundle check || bundle install -j4'
+    sh 'bundle exec rspec spec/windows/'
+  end
+end
+
 desc 'compile binary'
 task compile: :all
 
