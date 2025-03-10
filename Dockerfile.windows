@@ -1,23 +1,21 @@
+# Explicitly set Windows platform to avoid host OS mismatch
 ARG RUBY_VERSION=3.2.2
-FROM mcr.microsoft.com/windows/servercore:ltsc2019
+FROM --platform=windows/amd64 mcr.microsoft.com/windows/servercore:ltsc2019
 
-SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';"]
+# Configure PowerShell environment
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
-# Install Chocolatey
-RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; \
+# Install Chocolatey with TLS 1.2
+RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
     iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-# Install build tools
-RUN choco install -y \
-    ruby --version $env:RUBY_VERSION \
-    msys2 \
-    git
+# Install build tools with retries
+RUN choco install -y ruby --version=$env:RUBY_VERSION --retry-count=5 && \
+    choco install -y msys2 git --retry-count=5
 
 # Configure Ruby environment
-RUN refreshenv; \
-    gem install bundler --version 2.4.22; \
-    ridk install 3
+RUN ridk install 3 && \
+    gem install bundler --version 2.4.22 --no-document
 
 # Set environment variable to identify container
 ENV CONTAINER=true
@@ -25,5 +23,16 @@ ENV DOCKER_WINDOWS_CONTAINER=1
 
 WORKDIR /mitamae
 
-# Entrypoint for tests
-CMD ["powershell", "-Command", "bundle exec rspec spec/windows"]
+# Copy dependency files first for better caching
+COPY Gemfile Gemfile.lock ./
+
+# Install gems with platform awareness
+RUN bundle config set --local path vendor/bundle && \
+    bundle lock --add-platform x86_64-windows && \
+    bundle install --jobs 4 --retry 5
+
+# Copy application code
+COPY . .
+
+# Entrypoint for tests with error handling
+CMD ["powershell", "-Command", "if (!(Test-Path Gemfile.lock)) { exit 1 }; bundle exec rspec spec/windows"]
