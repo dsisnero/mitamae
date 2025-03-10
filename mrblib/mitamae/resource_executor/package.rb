@@ -45,7 +45,12 @@ module MItamae
       end
 
       def run_on_windows?
-        node[:platform] == 'windows'
+        # Check both platform and Docker environment
+        node[:platform] == 'windows' || ENV['DOCKER_WINDOWS_CONTAINER'] == '1'
+      end
+
+      def in_container?
+        ENV['CONTAINER'] == 'true' || File.exist?('/.dockerenv')
       end
 
       def install_package_on_windows(name, version, options)
@@ -56,6 +61,10 @@ module MItamae
           install_with_chocolatey(name, version, options)
         elsif provider == :winget
           install_with_winget(name, version, options)
+        # Container-specific logic
+        elsif in_container?
+          # In Docker containers, prefer Chocolatey
+          install_with_chocolatey(name, version, options)
         # Otherwise try to use available package managers in order
         elsif check_command('where choco')
           install_with_chocolatey(name, version, options)
@@ -89,6 +98,10 @@ module MItamae
           remove_with_chocolatey(name, options)
         elsif provider == :winget
           remove_with_winget(name, options)
+        # Container-specific logic
+        elsif in_container?
+          # In Docker containers, prefer Chocolatey
+          remove_with_chocolatey(name, options)
         # Otherwise try to use available package managers in order
         elsif check_command('where choco')
           remove_with_chocolatey(name, options)

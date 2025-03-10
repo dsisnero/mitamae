@@ -1,0 +1,29 @@
+ARG RUBY_VERSION=3.2.2
+FROM mcr.microsoft.com/windows/servercore:ltsc2019
+
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';"]
+
+# Install Chocolatey
+RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; \
+    iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Install build tools
+RUN choco install -y \
+    ruby --version $env:RUBY_VERSION \
+    msys2 \
+    git
+
+# Configure Ruby environment
+RUN refreshenv; \
+    gem install bundler --version 2.4.22; \
+    ridk install 3
+
+# Set environment variable to identify container
+ENV CONTAINER=true
+ENV DOCKER_WINDOWS_CONTAINER=1
+
+WORKDIR /mitamae
+
+# Entrypoint for tests
+CMD ["powershell", "-Command", "bundle exec rspec spec/windows"]

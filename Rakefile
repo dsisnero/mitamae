@@ -81,11 +81,30 @@ task 'test:integration' do
   end
 end
 
-desc 'run Windows serverspec tests'
+desc 'Run Windows tests in Docker container'
 task 'test:windows' do
   Dir.chdir(__dir__) do
-    sh 'bundle check || bundle install -j4'
-    sh 'bundle exec rspec spec/windows/'
+    # For local Windows testing without Docker
+    if ENV['NO_DOCKER']
+      sh 'bundle check || bundle install -j4'
+      sh 'bundle exec rspec spec/windows/'
+    else
+      # Build Docker image with Windows test environment
+      sh <<~CMD
+        docker build -t mitamae-windows-tester \\
+          --build-arg RUBY_VERSION=3.2.2 \\
+          -f Dockerfile.windows .
+      CMD
+
+      # Run tests in container
+      sh <<~CMD
+        docker run --rm -it \\
+          -v "#{Dir.pwd}:/mitamae" \\
+          -e DOCKER_WINDOWS_CONTAINER=1 \\
+          mitamae-windows-tester \\
+          powershell -Command "cd /mitamae; bundle exec rspec spec/windows"
+      CMD
+    end
   end
 end
 
