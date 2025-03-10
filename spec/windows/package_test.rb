@@ -22,6 +22,12 @@ package 'curl' do
   action :install
 end
 
+# Test WinGet provider explicitly
+package 'Microsoft.PowerToys' do
+  provider :winget
+  action :install
+end
+
 # Test package installation status check
 package 'notepad++' do
   action :install

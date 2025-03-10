@@ -24,11 +24,33 @@ with [dotfiles](https://github.com/search?q=dotfiles+mitamae&type=code).
 
 Download a binary for your platform from [GitHub Releases](https://github.com/itamae-kitchen/mitamae/releases).
 
+### Linux/macOS
+
 ```bash
 curl -L https://github.com/itamae-kitchen/mitamae/releases/latest/download/mitamae-x86_64-linux.tar.gz \
   | tar xvz
 ./mitamae-x86_64-linux help
 ```
+
+### Windows
+
+After downloading and extracting the Windows binaries, you can use either:
+
+1. **Command Prompt**:
+   ```batch
+   mitamae-x86_64-windows.bat local recipe.rb
+   ```
+
+2. **PowerShell**:
+   ```powershell
+   .\mitamae-x86_64-windows.ps1 local .\recipe.rb -l debug
+   ```
+
+The bootstrap scripts will:
+- Automatically locate the mitamae executable
+- Handle spaces in file paths
+- Forward all command line arguments
+- Provide clear error messages if the executable is missing
 
 ## Getting Started
 
