@@ -53,11 +53,15 @@ CROSS_TARGETS = %w[
   linux-aarch64
   darwin-x86_64
   darwin-aarch64
+  windows-x86_64
+  windows-i386
 ]
 
 STRIP_TARGETS = %w[
   linux-x86_64
   linux-i386
+  windows-x86_64
+  windows-i386
 ]
 
 # avoid redefining constants in mruby Rakefile
@@ -99,11 +103,35 @@ CROSS_TARGETS.each do |target|
 
       FileUtils.mkdir_p('mitamae-build')
       os, arch = target.split('-', 2)
-      bin = "mitamae-build/mitamae-#{arch}-#{os}"
-      sh "cp mruby/build/#{target.shellescape}/bin/mitamae #{bin.shellescape}"
+      
+      # Handle Windows executables with .exe extension
+      bin = if os == 'windows'
+              "mitamae-build/mitamae-#{arch}-#{os}.exe"
+            else
+              "mitamae-build/mitamae-#{arch}-#{os}"
+            end
+      
+      # Copy the binary from build directory
+      source_bin = if os == 'windows'
+                     "mruby/build/#{target.shellescape}/bin/mitamae.exe"
+                   else
+                     "mruby/build/#{target.shellescape}/bin/mitamae"
+                   end
+      sh "cp #{source_bin.shellescape} #{bin.shellescape}"
 
       if STRIP_TARGETS.include?(target)
-        sh "strip --strip-unneeded #{bin.shellescape}"
+        if os == 'windows'
+          # Use appropriate strip command for Windows binaries if available
+          if system('which x86_64-w64-mingw32-strip >/dev/null 2>&1')
+            sh "x86_64-w64-mingw32-strip --strip-unneeded #{bin.shellescape}"
+          elsif system('which i686-w64-mingw32-strip >/dev/null 2>&1') && arch == 'i386'
+            sh "i686-w64-mingw32-strip --strip-unneeded #{bin.shellescape}"
+          else
+            puts "Warning: No appropriate strip command found for Windows binaries"
+          end
+        else
+          sh "strip --strip-unneeded #{bin.shellescape}"
+        end
       end
     end
   end

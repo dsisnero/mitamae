@@ -135,6 +135,9 @@ You may use the following mruby features in mitamae recipes.
 * All [operating systems supported by Serverspec](https://serverspec.org/tutorial.html#multi_os_support)
   are supported since they share their underlying library, [Specinfra](https://github.com/mizzy/specinfra).
   * See [CHANGELOG](./CHANGELOG.md) or [mruby-specinfra](https://github.com/itamae-kitchen/mruby-specinfra) to find what Specinfra version is used.
+* Windows support is available for x86_64 and i386 architectures.
+  * Windows package management is supported through Chocolatey and WinGet.
+  * Windows service management is supported through the service resource.
 
 ### Running mitamae on servers
 

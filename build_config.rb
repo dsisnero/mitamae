@@ -139,3 +139,49 @@ if build_targets.include?('darwin-aarch64')
     gem_config(conf)
   end
 end
+
+if build_targets.include?('windows-x86_64')
+  MRuby::CrossBuild.new('windows-x86_64') do |conf|
+    toolchain :gcc
+    
+    [conf.cc, conf.linker].each do |cc|
+      cc.command = 'zig cc -target x86_64-windows-gnu -static'
+      cc.flags << '-DMRB_ARY_LENGTH_MAX=65536'
+    end
+    conf.archiver.command = 'zig ar'
+    
+    # Windows-specific configuration
+    conf.build_mrbtest_lib_only
+    conf.disable_libmrgss if conf.respond_to?(:disable_libmrgss)
+    conf.disable_presym if conf.respond_to?(:disable_presym)
+    
+    # To configure: mrbgems/mruby-yaml, k0kubun/mruby-onig-regexp
+    conf.host_target = 'x86_64-w64-mingw32'
+    
+    debug_config(conf)
+    gem_config(conf)
+  end
+end
+
+if build_targets.include?('windows-i386')
+  MRuby::CrossBuild.new('windows-i386') do |conf|
+    toolchain :gcc
+    
+    [conf.cc, conf.linker].each do |cc|
+      cc.command = 'zig cc -target i386-windows-gnu -static'
+      cc.flags << '-DMRB_ARY_LENGTH_MAX=65536'
+    end
+    conf.archiver.command = 'zig ar'
+    
+    # Windows-specific configuration
+    conf.build_mrbtest_lib_only
+    conf.disable_libmrgss if conf.respond_to?(:disable_libmrgss)
+    conf.disable_presym if conf.respond_to?(:disable_presym)
+    
+    # To configure: mrbgems/mruby-yaml, k0kubun/mruby-onig-regexp
+    conf.host_target = 'i686-w64-mingw32'
+    
+    debug_config(conf)
+    gem_config(conf)
+  end
+end

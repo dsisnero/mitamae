@@ -1,0 +1,65 @@
+name: Windows Test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'mrblib/**'
+      - '.github/workflows/test-windows.yml'
+
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.1'
+        bundler-cache: true
+
+    - name: Setup Zig
+      run: |
+        $ZigVersion = "0.10.1"
+        Invoke-WebRequest -Uri "https://ziglang.org/download/$ZigVersion/zig-windows-x86_64-$ZigVersion.zip" -OutFile zig.zip
+        Expand-Archive -Path zig.zip -DestinationPath C:\zig
+        echo "C:\zig\zig-windows-x86_64-$ZigVersion" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: Install dependencies
+      run: |
+        gem install rake
+        choco install mingw -y --force
+
+    - name: Build mitamae
+      run: |
+        rake "release:build:windows-x86_64"
+
+    - name: Create test recipe
+      run: |
+        @"
+        execute 'echo Hello from Windows' do
+          command 'echo Hello from Windows'
+        end
+
+        package 'notepad++' do
+          action :install
+        end
+
+        directory 'C:\mitamae_test' do
+          action :create
+        end
+
+        file 'C:\mitamae_test\test.txt' do
+          content 'This is a test file created by mitamae'
+        end
+        "@ | Out-File -FilePath windows_test.rb -Encoding utf8
+
+    - name: Run test recipe
+      run: |
+        .\mitamae-build\mitamae-x86_64-windows.exe local -l debug windows_test.rb
