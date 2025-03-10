@@ -138,6 +138,11 @@ You may use the following mruby features in mitamae recipes.
 * Windows support is available for x86_64 and i386 architectures.
   * Windows package management is supported through Chocolatey and WinGet.
   * Windows service management is supported through the service resource.
+  * Windows-specific resources include:
+    * Registry management
+    * Environment variables
+    * User and group management
+    * File attributes (hidden, readonly)
 
 ### Running mitamae on servers
 
