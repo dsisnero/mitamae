@@ -150,6 +150,10 @@ if build_targets.include?('windows-x86_64')
     end
     conf.archiver.command = 'zig ar'
     
+    # Add these environment variables for libyaml build
+    conf.env['AR'] = 'zig ar'
+    conf.env['RANLIB'] = 'zig ranlib'
+    
     # Windows-specific configuration
     conf.build_mrbtest_lib_only
     conf.disable_libmrgss if conf.respond_to?(:disable_libmrgss)
@@ -172,6 +176,10 @@ if build_targets.include?('windows-i386')
       cc.flags << '-DMRB_ARY_LENGTH_MAX=65536'
     end
     conf.archiver.command = 'zig ar'
+    
+    # Add these environment variables for libyaml build
+    conf.env['AR'] = 'zig ar'
+    conf.env['RANLIB'] = 'zig ranlib'
     
     # Windows-specific configuration
     conf.build_mrbtest_lib_only
