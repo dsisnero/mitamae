@@ -31,9 +31,10 @@ MRuby::Gem::Specification.new('mitamae') do |spec|
   spec.add_dependency 'mruby-shellwords',  mgem: 'mruby-shellwords'
   spec.add_dependency 'mruby-specinfra',   mgem: 'mruby-specinfra'
 
-  # Use our Windows-compatible mruby-yaml or the original one
+  # For Windows, we'll skip mruby-yaml for now to get the build working
   if ENV['OS'] == 'Windows_NT'
-    spec.add_dependency 'mruby-yaml', path: "#{MRUBY_ROOT}/../mruby-yaml-windows"
+    # Skip mruby-yaml on Windows for now
+    # We'll implement a proper solution later
   else
     spec.add_dependency 'mruby-yaml', github: 'mrbgems/mruby-yaml'
   end
