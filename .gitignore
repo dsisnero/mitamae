@@ -4,3 +4,4 @@ ghr
 /mruby
 /MacOSX.sdk
 .aider*
+/mruby-yaml-windows/
