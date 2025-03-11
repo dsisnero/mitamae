@@ -88,15 +88,34 @@ task 'test:windows' do
     if ENV['NO_DOCKER']
       sh 'bundle check || bundle install -j4'
       sh 'bundle exec rspec spec/windows/'
+    elsif RUBY_PLATFORM =~ /linux/ && ENV['DOCKER_HOST'].nil?
+      # Use QEMU emulation for Windows containers on Linux
+      sh 'docker run --privileged --rm tonistiigi/binfmt --install all'
+      sh 'docker buildx create --use --name windows-builder || echo "Builder may already exist"'
+      
+      sh <<~CMD
+        docker buildx build --platform windows/amd64 \\
+          -t mitamae-windows-tester \\
+          --build-arg RUBY_VERSION=3.2.2 \\
+          -f Dockerfile.windows .
+      CMD
+
+      sh <<~CMD
+        docker run --rm -it \\
+          --platform windows/amd64 \\
+          -v "#{Dir.pwd}:/mitamae" \\
+          -e DOCKER_WINDOWS_CONTAINER=1 \\
+          mitamae-windows-tester \\
+          powershell -Command "cd /mitamae; bundle exec rspec spec/windows"
+      CMD
     else
-      # Build Docker image with Windows test environment
+      # Native Windows container execution
       sh <<~CMD
         docker build -t mitamae-windows-tester \\
           --build-arg RUBY_VERSION=3.2.2 \\
           -f Dockerfile.windows .
       CMD
 
-      # Run tests in container
       sh <<~CMD
         docker run --rm -it \\
           -v "#{Dir.pwd}:/mitamae" \\

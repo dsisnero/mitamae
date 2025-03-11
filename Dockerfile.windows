@@ -1,6 +1,6 @@
-# Explicitly set Windows platform to avoid host OS mismatch
+# Use Windows Server Core 2022 base image
 ARG RUBY_VERSION=3.2.2
-FROM --platform=windows/amd64 mcr.microsoft.com/windows/servercore:ltsc2019
+FROM --platform=windows/amd64 mcr.microsoft.com/windows/servercore:ltsc2022
 
 # Configure PowerShell environment
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]

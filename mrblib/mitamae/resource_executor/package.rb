@@ -46,11 +46,13 @@ module MItamae
 
       def run_on_windows?
         # Check both platform and Docker environment
-        node[:platform] == 'windows' || ENV['DOCKER_WINDOWS_CONTAINER'] == '1'
+        node[:platform] == 'windows' || ENV['DOCKER_WINDOWS_CONTAINER'] == '1' || 
+          (ENV['OS'] && ENV['OS'].downcase.include?('windows'))
       end
 
       def in_container?
-        ENV['CONTAINER'] == 'true' || File.exist?('/.dockerenv')
+        ENV['CONTAINER'] == 'true' || File.exist?('/.dockerenv') || 
+          ENV['DOCKER_WINDOWS_CONTAINER'] == '1'
       end
 
       def install_package_on_windows(name, version, options)

@@ -30,7 +30,8 @@ end
 package 'Microsoft.PowerToys' do
   provider :winget
   action :install
-  not_if { ENV['CONTAINER'] == 'true' }
+  not_if { ENV['CONTAINER'] == 'true' || ENV['DOCKER_WINDOWS_CONTAINER'] == '1' }
+  not_if { !check_command('where winget') }
 end
 
 # Test package installation status check
