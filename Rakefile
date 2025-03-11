@@ -3,34 +3,37 @@ require 'shellwords'
 
 MRUBY_VERSION = '3.0.0'
 
-file :mruby do
+# Make mruby task a regular task instead of a file task to better control its behavior
+task :mruby do
   version_file = File.join(__dir__, '.mruby_version')
   current_version = MRUBY_VERSION
   
   # Check if we already have the correct version
   if Dir.exist?('mruby') && File.exist?(version_file) && File.read(version_file).strip == current_version
     puts "MRuby version #{current_version} already downloaded, skipping download"
+    return # Exit early to avoid downloading again
+  end
+  
+  # Clean up any existing mruby directory if it's the wrong version
+  if Dir.exist?('mruby')
+    puts "Removing existing mruby directory (wrong version or corrupted)"
+    FileUtils.rm_rf('mruby')
+  end
+  
+  # Download and setup mruby
+  if RUBY_PLATFORM.match(/solaris/)
+    sh "git clone --branch=#{MRUBY_VERSION} https://github.com/mruby/mruby"
+    patch = 'gpatch'
   else
-    # Clean up any existing mruby directory if it's the wrong version
-    if Dir.exist?('mruby')
-      puts "Removing existing mruby directory (wrong version or corrupted)"
-      FileUtils.rm_rf('mruby')
-    end
-    
-    # Download and setup mruby
-    if RUBY_PLATFORM.match(/solaris/)
-      sh "git clone --branch=#{MRUBY_VERSION} https://github.com/mruby/mruby"
-      patch = 'gpatch'
-    else
-      sh "curl -L --fail --retry 3 --retry-delay 1 https://github.com/mruby/mruby/archive/#{MRUBY_VERSION}.tar.gz -s -o - | tar zxf -"
-      FileUtils.mv("mruby-#{MRUBY_VERSION}", 'mruby')
-      patch = 'patch'
-    end
+    sh "curl -L --fail --retry 3 --retry-delay 1 https://github.com/mruby/mruby/archive/#{MRUBY_VERSION}.tar.gz -s -o - | tar zxf -"
+    FileUtils.mv("mruby-#{MRUBY_VERSION}", 'mruby')
+    patch = 'patch'
+  end
 
-    # Patch: https://github.com/mruby/mruby/pull/5318
-    if MRUBY_VERSION == '3.0.0'
-      IO.popen([patch, '-p0'], 'w') do |io|
-        io.write(<<-'EOS')
+  # Patch: https://github.com/mruby/mruby/pull/5318
+  if MRUBY_VERSION == '3.0.0'
+    IO.popen([patch, '-p0'], 'w') do |io|
+      io.write(<<-'EOS')
 --- mruby/lib/mruby/build.rb  2021-03-05 00:07:35.000000000 -0800
 +++ mruby/lib/mruby/build.rb  2021-03-05 12:25:15.159190950 -0800
 @@ -320,12 +320,16 @@
@@ -55,13 +58,12 @@ file :mruby do
      end
 
      def mrbcfile=(path)
-        EOS
-      end
+      EOS
     end
-    
-    # Save the version we just installed
-    File.write(version_file, current_version)
   end
+  
+  # Save the version we just installed
+  File.write(version_file, current_version)
 end
 
 CROSS_TARGETS = %w[
@@ -87,9 +89,15 @@ mruby_root = File.expand_path(ENV['MRUBY_ROOT'] || "#{Dir.pwd}/mruby")
 mruby_config = File.expand_path(ENV['MRUBY_CONFIG'] || 'build_config.rb')
 ENV['MRUBY_ROOT'] = mruby_root
 ENV['MRUBY_CONFIG'] = mruby_config
+
+# Only invoke mruby task if the directory doesn't exist
 Rake::Task[:mruby].invoke unless Dir.exist?(mruby_root)
-Dir.chdir(mruby_root)
-load "#{mruby_root}/Rakefile"
+
+# Load mruby's Rakefile only if we need to build
+if File.exist?("#{mruby_root}/Rakefile")
+  # Load mruby's Rakefile but don't change directory
+  instance_eval File.read("#{mruby_root}/Rakefile")
+end
 
 desc 'run serverspec'
 task 'test:integration' do
@@ -150,7 +158,8 @@ task :compile do
   # This task needs to run the mruby build system
   Dir.chdir(mruby_root) do
     if ENV['BUILD_TARGET']
-      sh "rake #{ENV['BUILD_TARGET']}"
+      # For cross-compilation, we need to use the all task with BUILD_TARGET set
+      sh "rake all MRUBY_CONFIG=#{mruby_config}"
     else
       sh "rake"
     end
@@ -180,6 +189,11 @@ namespace :windows do
     ENV['OS'] = 'Windows_NT' unless ENV['OS']
     # Make sure we're using the right build target
     ENV['BUILD_TARGET'] = 'windows-x86_64'
+    
+    # Ensure mruby is downloaded and patched only once
+    unless Dir.exist?('mruby')
+      Rake::Task[:mruby].invoke
+    end
     
     # Run the compile task directly
     Rake::Task[:compile].invoke
