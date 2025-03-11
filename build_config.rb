@@ -148,9 +148,8 @@ if build_targets.include?('windows-x86_64')
       cc.command = 'zig cc -target x86_64-windows-gnu -static'
       cc.flags << '-DMRB_ARY_LENGTH_MAX=65536'
     end
-    conf.archiver.command = 'zig ar'
     
-    # Set build tools directly
+    # Set build tools directly (only once)
     conf.archiver.command = 'zig ar'
     ENV['RANLIB'] = 'zig ranlib'
     
@@ -175,9 +174,8 @@ if build_targets.include?('windows-i386')
       cc.command = 'zig cc -target i386-windows-gnu -static'
       cc.flags << '-DMRB_ARY_LENGTH_MAX=65536'
     end
-    conf.archiver.command = 'zig ar'
     
-    # Set build tools directly
+    # Set build tools directly (only once)
     conf.archiver.command = 'zig ar'
     ENV['RANLIB'] = 'zig ranlib'
     

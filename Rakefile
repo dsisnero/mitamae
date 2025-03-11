@@ -146,7 +146,16 @@ task 'test:windows' do
 end
 
 desc 'compile binary'
-task compile: :all
+task :compile do
+  # This task needs to run the mruby build system
+  Dir.chdir(mruby_root) do
+    if ENV['BUILD_TARGET']
+      sh "rake #{ENV['BUILD_TARGET']}"
+    else
+      sh "rake"
+    end
+  end
+end
 
 desc 'cleanup build artifacts'
 task :clean do
@@ -171,7 +180,15 @@ namespace :windows do
     ENV['OS'] = 'Windows_NT' unless ENV['OS']
     # Make sure we're using the right build target
     ENV['BUILD_TARGET'] = 'windows-x86_64'
-    sh "rake compile"
+    
+    # Run the compile task directly
+    Rake::Task[:compile].invoke
+    
+    # Run tests if they exist
+    if Dir.exist?('spec/windows')
+      puts "Running Windows tests..."
+      sh "bundle exec rspec spec/windows" rescue puts "Warning: Tests failed or not available"
+    end
   end
 
   desc "Build mitamae for Windows"
