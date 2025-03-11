@@ -72,9 +72,21 @@ task :mruby do
       
       if File.exist?(build_rb_path)
         content = File.read(build_rb_path)
-        patched_content = content.gsub(
-          /gem_name = "mruby-bin-mrbc".*?@mrbcfile = exefile\("#{gem\.build\.build_dir}\/bin\/mrbc"\)/m,
-          <<-'RUBY'
+        # Use a simpler pattern that doesn't require escaping
+        old_code = 'gem_name = "mruby-bin-mrbc"'
+        old_code_end = '@mrbcfile = exefile("#{gem.build.build_dir}/bin/mrbc")'
+        
+        # Find the section to replace
+        if content.include?(old_code) && content.include?(old_code_end)
+          # Replace the section with our new code
+          start_pos = content.index(old_code)
+          end_pos = content.index(old_code_end) + old_code_end.length
+          
+          # Extract the section to replace
+          section_to_replace = content[start_pos...end_pos]
+          
+          # Replace with new code
+          patched_content = content.sub(section_to_replace, <<-'RUBY'
 gem_name = "mruby-bin-mrbc"
       if (gem = @gems[gem_name])
         @mrbcfile = exefile("#{gem.build.build_dir}/bin/mrbc")
