@@ -32,8 +32,13 @@ task :mruby do
 
   # Patch: https://github.com/mruby/mruby/pull/5318
   if MRUBY_VERSION == '3.0.0'
-    IO.popen([patch, '-p0'], 'w') do |io|
-      io.write(<<-'EOS')
+    # Check if patch command exists
+    has_patch_command = system("#{patch} --version > NUL 2>&1")
+    
+    if has_patch_command
+      # Use external patch command if available
+      IO.popen([patch, '-p0'], 'w') do |io|
+        io.write(<<-'EOS')
 --- mruby/lib/mruby/build.rb  2021-03-05 00:07:35.000000000 -0800
 +++ mruby/lib/mruby/build.rb  2021-03-05 12:25:15.159190950 -0800
 @@ -320,12 +320,16 @@
@@ -58,7 +63,36 @@ task :mruby do
      end
 
      def mrbcfile=(path)
-      EOS
+        EOS
+      end
+    else
+      # Manual patching using Ruby if patch command is not available
+      puts "Patch command not found, applying patch using Ruby..."
+      build_rb_path = File.join(mruby_root, 'lib', 'mruby', 'build.rb')
+      
+      if File.exist?(build_rb_path)
+        content = File.read(build_rb_path)
+        patched_content = content.gsub(
+          /gem_name = "mruby-bin-mrbc".*?@mrbcfile = exefile\("#{gem\.build\.build_dir}\/bin\/mrbc"\)/m,
+          <<-'RUBY'
+gem_name = "mruby-bin-mrbc"
+      if (gem = @gems[gem_name])
+        @mrbcfile = exefile("#{gem.build.build_dir}/bin/mrbc")
+      elsif !host? && (host = MRuby.targets["host"])
+        if (gem = host.gems[gem_name])
+          @mrbcfile = exefile("#{gem.build.build_dir}/bin/mrbc")
+        elsif host.mrbcfile_external?
+          @mrbcfile = host.mrbcfile
+        end
+      end
+      @mrbcfile || fail("external mrbc or mruby-bin-mrbc gem in current('#{@name}') or 'host' build is required")
+          RUBY
+        )
+        File.write(build_rb_path, patched_content)
+        puts "Successfully applied patch to #{build_rb_path}"
+      else
+        puts "Warning: Could not find #{build_rb_path} to patch"
+      end
     end
   end
   
