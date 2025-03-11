@@ -4,19 +4,27 @@ require 'shellwords'
 MRUBY_VERSION = '3.0.0'
 
 file :mruby do
-  if RUBY_PLATFORM.match(/solaris/)
-    sh "git clone --branch=#{MRUBY_VERSION} https://github.com/mruby/mruby"
-    patch = 'gpatch'
+  version_file = File.join(__dir__, '.mruby_version')
+  current_version = MRUBY_VERSION
+  
+  # Check if we already have the correct version
+  if Dir.exist?('mruby') && File.exist?(version_file) && File.read(version_file).strip == current_version
+    puts "MRuby version #{current_version} already downloaded, skipping download"
   else
-    sh "curl -L --fail --retry 3 --retry-delay 1 https://github.com/mruby/mruby/archive/#{MRUBY_VERSION}.tar.gz -s -o - | tar zxf -"
-    FileUtils.mv("mruby-#{MRUBY_VERSION}", 'mruby')
-    patch = 'patch'
-  end
+    # Download and setup mruby
+    if RUBY_PLATFORM.match(/solaris/)
+      sh "git clone --branch=#{MRUBY_VERSION} https://github.com/mruby/mruby"
+      patch = 'gpatch'
+    else
+      sh "curl -L --fail --retry 3 --retry-delay 1 https://github.com/mruby/mruby/archive/#{MRUBY_VERSION}.tar.gz -s -o - | tar zxf -"
+      FileUtils.mv("mruby-#{MRUBY_VERSION}", 'mruby')
+      patch = 'patch'
+    end
 
-  # Patch: https://github.com/mruby/mruby/pull/5318
-  if MRUBY_VERSION == '3.0.0'
-    IO.popen([patch, '-p0'], 'w') do |io|
-      io.write(<<-'EOS')
+    # Patch: https://github.com/mruby/mruby/pull/5318
+    if MRUBY_VERSION == '3.0.0'
+      IO.popen([patch, '-p0'], 'w') do |io|
+        io.write(<<-'EOS')
 --- mruby/lib/mruby/build.rb  2021-03-05 00:07:35.000000000 -0800
 +++ mruby/lib/mruby/build.rb  2021-03-05 12:25:15.159190950 -0800
 @@ -320,12 +320,16 @@
@@ -41,8 +49,12 @@ file :mruby do
      end
 
      def mrbcfile=(path)
-      EOS
+        EOS
+      end
     end
+    
+    # Save the version we just installed
+    File.write(version_file, current_version)
   end
 end
 
