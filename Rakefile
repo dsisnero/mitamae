@@ -95,8 +95,11 @@ Rake::Task[:mruby].invoke unless Dir.exist?(mruby_root)
 
 # Load mruby's Rakefile only if we need to build
 if File.exist?("#{mruby_root}/Rakefile")
-  # Load mruby's Rakefile but don't change directory
-  instance_eval File.read("#{mruby_root}/Rakefile")
+  # We need to change directory temporarily to load mruby's Rakefile properly
+  # because it depends on relative paths
+  Dir.chdir(mruby_root) do
+    load "#{mruby_root}/Rakefile"
+  end
 end
 
 desc 'run serverspec'
