@@ -150,9 +150,9 @@ if build_targets.include?('windows-x86_64')
     end
     conf.archiver.command = 'zig ar'
     
-    # Add these environment variables for libyaml build
-    conf.env['AR'] = 'zig ar'
-    conf.env['RANLIB'] = 'zig ranlib'
+    # Set build tools directly
+    conf.archiver.command = 'zig ar'
+    ENV['RANLIB'] = 'zig ranlib'
     
     # Windows-specific configuration
     conf.build_mrbtest_lib_only
@@ -177,9 +177,9 @@ if build_targets.include?('windows-i386')
     end
     conf.archiver.command = 'zig ar'
     
-    # Add these environment variables for libyaml build
-    conf.env['AR'] = 'zig ar'
-    conf.env['RANLIB'] = 'zig ranlib'
+    # Set build tools directly
+    conf.archiver.command = 'zig ar'
+    ENV['RANLIB'] = 'zig ranlib'
     
     # Windows-specific configuration
     conf.build_mrbtest_lib_only
