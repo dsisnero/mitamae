@@ -11,6 +11,12 @@ file :mruby do
   if Dir.exist?('mruby') && File.exist?(version_file) && File.read(version_file).strip == current_version
     puts "MRuby version #{current_version} already downloaded, skipping download"
   else
+    # Clean up any existing mruby directory if it's the wrong version
+    if Dir.exist?('mruby')
+      puts "Removing existing mruby directory (wrong version or corrupted)"
+      FileUtils.rm_rf('mruby')
+    end
+    
     # Download and setup mruby
     if RUBY_PLATFORM.match(/solaris/)
       sh "git clone --branch=#{MRUBY_VERSION} https://github.com/mruby/mruby"
@@ -142,9 +148,17 @@ end
 desc 'compile binary'
 task compile: :all
 
-desc 'cleanup'
+desc 'cleanup build artifacts'
 task :clean do
-  sh 'rake deep_clean'
+  # Only clean the build directory, not the entire mruby
+  FileUtils.rm_rf('mruby/build') if Dir.exist?('mruby/build')
+end
+
+desc 'clobber all downloads and build artifacts'
+task :clobber => :clean do
+  # Remove mruby completely and the version file
+  FileUtils.rm_rf('mruby') if Dir.exist?('mruby')
+  FileUtils.rm_f('.mruby_version') if File.exist?('.mruby_version')
 end
 
 desc 'cross compile for release'
@@ -153,9 +167,11 @@ task 'release:build' => CROSS_TARGETS.map { |target| "release:build:#{target}" }
 # Windows-specific build tasks
 namespace :windows do
   desc "Build and test mitamae for Windows"
-  task :test do
+  task :test => :clean do
     ENV['OS'] = 'Windows_NT' unless ENV['OS']
-    sh "rake compile BUILD_TARGET=windows-x86_64"
+    # Make sure we're using the right build target
+    ENV['BUILD_TARGET'] = 'windows-x86_64'
+    sh "rake compile"
   end
 
   desc "Build mitamae for Windows"
