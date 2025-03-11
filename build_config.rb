@@ -158,6 +158,9 @@ if build_targets.include?('windows-x86_64')
     conf.disable_libmrgss if conf.respond_to?(:disable_libmrgss)
     conf.disable_presym if conf.respond_to?(:disable_presym)
     
+    # Fix for Windows command line length limits
+    conf.mrbc.compile_options = '-g'
+    
     # To configure: mrbgems/mruby-yaml, k0kubun/mruby-onig-regexp
     conf.host_target = 'x86_64-w64-mingw32'
     
@@ -183,6 +186,9 @@ if build_targets.include?('windows-i386')
     conf.build_mrbtest_lib_only
     conf.disable_libmrgss if conf.respond_to?(:disable_libmrgss)
     conf.disable_presym if conf.respond_to?(:disable_presym)
+    
+    # Fix for Windows command line length limits
+    conf.mrbc.compile_options = '-g'
     
     # To configure: mrbgems/mruby-yaml, k0kubun/mruby-onig-regexp
     conf.host_target = 'i686-w64-mingw32'

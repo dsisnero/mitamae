@@ -62,6 +62,15 @@ task :mruby do
     end
   end
   
+  # Apply patch for Windows command line length limits
+  if File.exist?('mruby_command_patch.rb')
+    command_patch_path = File.join(mruby_root, 'lib', 'mruby', 'build', 'command.rb')
+    if File.exist?(command_patch_path)
+      puts "Applying Windows command line length limit patch"
+      require_relative 'mruby_command_patch'
+    end
+  end
+  
   # Save the version we just installed
   File.write(version_file, current_version)
 end
