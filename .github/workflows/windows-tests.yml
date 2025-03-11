@@ -1,0 +1,44 @@
+name: Windows Tests
+
+on:
+  workflow_dispatch:  # Add this for manual triggering
+    inputs:
+      branch:
+        description: 'Branch to test'
+        required: true
+        default: 'main'
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'spec/windows/**'
+      - 'mrblib/mitamae/resource_executor/package.rb'
+      - 'Dockerfile.windows'
+      - 'Rakefile'
+  pull_request:
+    paths:
+      - 'spec/windows/**'
+      - 'mrblib/mitamae/resource_executor/package.rb'
+      - 'Dockerfile.windows'
+      - 'Rakefile'
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
+      
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+      
+      - name: Install dependencies
+        run: bundle install
+      
+      - name: Run Windows tests
+        run: bundle exec rake test:windows
+        env:
+          NO_DOCKER: true
