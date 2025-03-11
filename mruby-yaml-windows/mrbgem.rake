@@ -16,7 +16,7 @@ MRuby::Gem::Specification.new('mruby-yaml') do |spec|
     spec.cc.include_paths << "#{build.root}/build/libyaml/include"
     
     # Skip the bootstrap script that doesn't work on Windows
-    spec.build.defines << 'MRUBY_YAML_WINDOWS_BUILD'
+    spec.cc.defines << 'MRUBY_YAML_WINDOWS_BUILD'
   else
     # Original Unix build process
     yaml_dir = "#{spec.dir}/yaml"
