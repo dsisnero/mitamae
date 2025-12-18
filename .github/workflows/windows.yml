@@ -42,6 +42,8 @@ jobs:
         }
 
     - name: Build mitamae
+      env:
+        MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
       run: |
         rake "release:build:${{ matrix.target }}"
 

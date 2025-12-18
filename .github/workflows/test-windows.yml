@@ -38,6 +38,8 @@ jobs:
         choco install mingw -y --force
 
     - name: Build mitamae
+      env:
+        MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
       run: |
         rake "release:build:windows-x86_64"
 
