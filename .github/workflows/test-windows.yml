@@ -37,6 +37,18 @@ jobs:
         gem install rake
         choco install mingw -y --force
 
+        # Install oniguruma for mruby-onig-regexp
+        # Try vcpkg first, fall back to building from source if needed
+        if (Test-Path "C:\vcpkg\vcpkg.exe") {
+          C:\vcpkg\vcpkg.exe install oniguruma:x64-windows
+        } else {
+          Write-Host "vcpkg not found, trying Chocolatey..."
+          choco install oniguruma -y --force 2>&1 | Out-Null
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Oniguruma not available via package manager, mruby will bundle it"
+          }
+        }
+
     - name: Build mitamae
       env:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
