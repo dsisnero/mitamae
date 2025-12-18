@@ -42,7 +42,22 @@ jobs:
         }
 
         # Install pkg-config for library detection
-        choco install pkg-config -y --force
+        # Use vcpkg to install pkgconf (provides pkg-config.exe)
+        if (Test-Path "C:\vcpkg\vcpkg.exe") {
+          if ("${{ matrix.target }}" -eq "windows-x86_64") {
+            C:\vcpkg\vcpkg.exe install pkgconf:x64-windows
+          } else {
+            C:\vcpkg\vcpkg.exe install pkgconf:x86-windows
+          }
+          # Add vcpkg tools to PATH (contains pkgconf's pkg-config.exe)
+          $vcpkgRoot = "C:\vcpkg"
+          $toolsPath = Join-Path $vcpkgRoot "installed\${{ matrix.target == 'windows-x86_64' && 'x64-windows' || 'x86-windows' }}\tools\pkgconf"
+          if (Test-Path $toolsPath) {
+            echo "$toolsPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+        } else {
+          Write-Host "vcpkg not found, pkg-config may not be available"
+        }
 
         # Install oniguruma for mruby-onig-regexp
         # Try vcpkg first, fall back to building from source if needed

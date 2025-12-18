@@ -37,7 +37,18 @@ jobs:
         choco install mingw -y --force
 
         # Install pkg-config for library detection
-        choco install pkg-config -y --force
+        # Use vcpkg to install pkgconf (provides pkg-config.exe)
+        if (Test-Path "C:\vcpkg\vcpkg.exe") {
+          C:\vcpkg\vcpkg.exe install pkgconf:x64-windows
+          # Add vcpkg tools to PATH (contains pkgconf's pkg-config.exe)
+          $vcpkgRoot = "C:\vcpkg"
+          $toolsPath = Join-Path $vcpkgRoot "installed\x64-windows\tools\pkgconf"
+          if (Test-Path $toolsPath) {
+            echo "$toolsPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+        } else {
+          Write-Host "vcpkg not found, pkg-config may not be available"
+        }
 
         # Install oniguruma for mruby-onig-regexp
         # Try vcpkg first, fall back to building from source if needed
@@ -131,7 +142,18 @@ jobs:
         choco install mingw -y --force
 
         # Install pkg-config for library detection
-        choco install pkg-config -y --force
+        # Use vcpkg to install pkgconf (provides pkg-config.exe)
+        if (Test-Path "C:\vcpkg\vcpkg.exe") {
+          C:\vcpkg\vcpkg.exe install pkgconf:x64-windows
+          # Add vcpkg tools to PATH (contains pkgconf's pkg-config.exe)
+          $vcpkgRoot = "C:\vcpkg"
+          $toolsPath = Join-Path $vcpkgRoot "installed\x64-windows\tools\pkgconf"
+          if (Test-Path $toolsPath) {
+            echo "$toolsPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+        } else {
+          Write-Host "vcpkg not found, pkg-config may not be available"
+        }
 
         # Install oniguruma for mruby-onig-regexp
         # Try vcpkg first, fall back to building from source if needed
@@ -220,13 +242,27 @@ jobs:
     - name: Setup Zig
       run: |
         $ZigVersion = "0.10.1"
+        Invoke-WebRequest -Uri "https://ziglang.org/download/$ZigVersion/zig-windows-x86_64-$ZigVersion.zip" -OutFile zig.zip
+        Expand-Archive -Path zig.zip -DestinationPath C:\zig
+        echo "C:\zig\zig-windows-x86_64-$ZigVersion" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     - name: Install dependencies
       run: |
         gem install rake
         choco install mingw -y --force
 
         # Install pkg-config for library detection
-        choco install pkg-config -y --force
+        # Use vcpkg to install pkgconf (provides pkg-config.exe)
+        if (Test-Path "C:\vcpkg\vcpkg.exe") {
+          C:\vcpkg\vcpkg.exe install pkgconf:x64-windows
+          # Add vcpkg tools to PATH (contains pkgconf's pkg-config.exe)
+          $vcpkgRoot = "C:\vcpkg"
+          $toolsPath = Join-Path $vcpkgRoot "installed\x64-windows\tools\pkgconf"
+          if (Test-Path $toolsPath) {
+            echo "$toolsPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+        } else {
+          Write-Host "vcpkg not found, pkg-config may not be available"
+        }
 
         # Install oniguruma for mruby-onig-regexp
         # Try vcpkg first, fall back to building from source if needed
@@ -237,6 +273,7 @@ jobs:
           choco install oniguruma -y --force 2>&1 | Out-Null
           if ($LASTEXITCODE -ne 0) {
             Write-Host "Oniguruma not available via package manager, mruby will bundle it"
+          }
         }
 
     - name: Build mitamae
