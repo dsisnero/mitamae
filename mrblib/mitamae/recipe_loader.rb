@@ -10,7 +10,7 @@ module MItamae
       backend = @backend
       variables = {
         node: @node,
-        run_command: -> (*args) { backend.run_command(*args) },
+        run_command: ->(*args) { backend.run_command(*args) },
       }
 
       root = RecipeRoot.new
@@ -32,6 +32,11 @@ module MItamae
         node_yamls.each do |node_yaml|
           yaml = File.read(node_yaml)
           node.merge!(YAML.load(yaml))
+        end
+
+        # Initialize WindowsPath with node for platform detection
+        if defined?(MItamae::WindowsPath)
+          MItamae::WindowsPath.node = node
         end
       end
     end
