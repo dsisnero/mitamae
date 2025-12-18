@@ -14,6 +14,8 @@ file :mruby do
   else
     puts "DEBUG: Using curl to download mruby tarball"
     sh "curl -L --fail --retry 3 --retry-delay 1 https://github.com/mruby/mruby/archive/#{MRUBY_VERSION}.tar.gz -s -o - | tar zxf -"
+    puts "DEBUG: Contents of extracted directory: #{Dir.entries('.').join(', ')}"
+    puts "DEBUG: Contents of mruby-#{MRUBY_VERSION}: #{Dir.entries('mruby-3.0.0').join(', ')}" if Dir.exist?('mruby-3.0.0')
     puts "DEBUG: Moving mruby-#{MRUBY_VERSION} to mruby"
     FileUtils.mv("mruby-#{MRUBY_VERSION}", 'mruby')
     patch = 'patch'
