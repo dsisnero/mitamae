@@ -213,6 +213,38 @@ bd close <id>         # Complete work
 bd sync               # Sync with git
 ```
 
+## GitHub CLI for Workflow Monitoring
+
+Use `gh` (GitHub CLI) to monitor workflow status and debug failures:
+
+```bash
+# List recent workflow runs
+gh run list --limit 10
+
+# View details of a specific run
+gh run view <run-id> --json jobs,status,conclusion,workflowName
+
+# View logs for a failed job
+gh run view <run-id> --job <job-id> --log
+
+# Rerun a failed workflow
+gh run rerun <run-id>
+
+# List workflow files
+gh workflow list
+
+# View workflow definition
+gh workflow view build.yml
+
+# Run a workflow manually
+gh workflow run build.yml
+```
+
+For Windows workflow failures, check the Windows-specific workflows:
+- `windows.yml` - Basic Windows build
+- `test-windows.yml` - Windows integration tests
+- `windows-package-test.yml` - Package manager tests
+
 ## Landing the Plane (Session Completion)
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
