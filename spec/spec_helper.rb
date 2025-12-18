@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'serverspec'
 
 module MItamaeSpec
@@ -18,12 +20,13 @@ module MItamaeSpec
   end
 
   def run_command(*cmd, cwd: '/', redirect: {})
-    system('docker', 'exec', '-w', cwd, MItamaeSpec.container, *cmd, redirect) || raise("Failed to execute: #{cmd.inspect}")
+    system('docker', 'exec', '-w', cwd, MItamaeSpec.container, *cmd,
+           redirect) || raise("Failed to execute: #{cmd.inspect}")
   end
 end
 
 set :backend, :docker
-set :docker_uri, ENV['DOCKER_HOST']
+set :docker_uri, ENV.fetch('DOCKER_HOST', nil)
 set :docker_container, MItamaeSpec.container
 
 RSpec.configure do |config|
@@ -42,7 +45,7 @@ RSpec.configure do |config|
       '-v', "#{File.expand_path("mruby/build/#{MItamaeSpec::TARGET}")}:/mitamae",
       '-v', "#{File.expand_path('spec/recipes')}:/recipes",
       '-v', "#{File.expand_path('spec/plugins')}:/plugins",
-      'k0kubun/mitamae-spec', 'systemd',
+      'k0kubun/mitamae-spec', 'systemd'
     ) || raise
     # Workaround to avoid letting systemd clean up /tmp after `mitamae local`
     system('docker', 'exec', MItamaeSpec.container, 'systemctl', 'start', 'systemd-tmpfiles-clean', out: File::NULL)

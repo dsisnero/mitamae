@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe 'directory resource' do
@@ -6,6 +8,6 @@ describe 'directory resource' do
   end
 
   describe file('/tmp/shared_recipe_a') do
-    its(:content) { should eq('shared_recipe_a') }
+    its(:content) { is_expected.to eq('shared_recipe_a') }
   end
 end

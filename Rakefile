@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 require 'fileutils'
 require 'shellwords'
 
 MRUBY_VERSION = '3.0.0'
 
 file :mruby do
-  if RUBY_PLATFORM.match(/solaris/)
+  if RUBY_PLATFORM.include?('solaris')
     sh "git clone --branch=#{MRUBY_VERSION} https://github.com/mruby/mruby"
     patch = 'gpatch'
   else
@@ -16,53 +18,53 @@ file :mruby do
   # Patch: https://github.com/mruby/mruby/pull/5318
   if MRUBY_VERSION == '3.0.0'
     IO.popen([patch, '-p0'], 'w') do |io|
-      io.write(<<-'EOS')
---- mruby/lib/mruby/build.rb  2021-03-05 00:07:35.000000000 -0800
-+++ mruby/lib/mruby/build.rb  2021-03-05 12:25:15.159190950 -0800
-@@ -320,12 +320,16 @@
-       return @mrbcfile if @mrbcfile
+      io.write(<<~'PATCH')
+        --- mruby/lib/mruby/build.rb  2021-03-05 00:07:35.000000000 -0800
+        +++ mruby/lib/mruby/build.rb  2021-03-05 12:25:15.159190950 -0800
+        @@ -320,12 +320,16 @@
+               return @mrbcfile if @mrbcfile
 
-       gem_name = "mruby-bin-mrbc"
--      gem = @gems[gem_name]
--      gem ||= (host = MRuby.targets["host"]) && host.gems[gem_name]
--      unless gem
--        fail "external mrbc or mruby-bin-mrbc gem in current('#{@name}') or 'host' build is required"
-+      if (gem = @gems[gem_name])
-+        @mrbcfile = exefile("#{gem.build.build_dir}/bin/mrbc")
-+      elsif !host? && (host = MRuby.targets["host"])
-+        if (gem = host.gems[gem_name])
-+          @mrbcfile = exefile("#{gem.build.build_dir}/bin/mrbc")
-+        elsif host.mrbcfile_external?
-+          @mrbcfile = host.mrbcfile
-+        end
-       end
--      @mrbcfile = exefile("#{gem.build.build_dir}/bin/mrbc")
-+      @mrbcfile || fail("external mrbc or mruby-bin-mrbc gem in current('#{@name}') or 'host' build is required")
-     end
+               gem_name = "mruby-bin-mrbc"
+        -      gem = @gems[gem_name]
+        -      gem ||= (host = MRuby.targets["host"]) && host.gems[gem_name]
+        -      unless gem
+        -        fail "external mrbc or mruby-bin-mrbc gem in current('#{@name}') or 'host' build is required"
+        +      if (gem = @gems[gem_name])
+        +        @mrbcfile = exefile("#{gem.build.build_dir}/bin/mrbc")
+        +      elsif !host? && (host = MRuby.targets["host"])
+        +        if (gem = host.gems[gem_name])
+        +          @mrbcfile = exefile("#{gem.build.build_dir}/bin/mrbc")
+        +        elsif host.mrbcfile_external?
+        +          @mrbcfile = host.mrbcfile
+        +        end
+               end
+        -      @mrbcfile = exefile("#{gem.build.build_dir}/bin/mrbc")
+        +      @mrbcfile || fail("external mrbc or mruby-bin-mrbc gem in current('#{@name}') or 'host' build is required")
+             end
 
-     def mrbcfile=(path)
-      EOS
+             def mrbcfile=(path)
+      PATCH
     end
   end
 end
 
-CROSS_TARGETS = %w[
-  linux-x86_64
-  linux-i386
-  linux-armhf
-  linux-aarch64
-  darwin-x86_64
-  darwin-aarch64
-  windows-x86_64
-  windows-i386
-]
+CROSS_TARGETS = [
+  'linux-x86_64',
+  'linux-i386',
+  'linux-armhf',
+  'linux-aarch64',
+  'darwin-x86_64',
+  'darwin-aarch64',
+  'windows-x86_64',
+  'windows-i386',
+].freeze
 
-STRIP_TARGETS = %w[
-  linux-x86_64
-  linux-i386
-  windows-x86_64
-  windows-i386
-]
+STRIP_TARGETS = [
+  'linux-x86_64',
+  'linux-i386',
+  'windows-x86_64',
+  'windows-i386',
+].freeze
 
 # avoid redefining constants in mruby Rakefile
 mruby_root = File.expand_path(ENV['MRUBY_ROOT'] || "#{Dir.pwd}/mruby")
@@ -80,6 +82,25 @@ task 'test:integration' do
     sh 'bundle exec rspec'
   end
 end
+
+desc 'Run RuboCop'
+task :rubocop do
+  Dir.chdir(__dir__) do
+    sh 'bundle check || bundle install -j4'
+    sh 'bundle exec rubocop'
+  end
+end
+
+desc 'Run RuboCop with auto-correct'
+task 'rubocop:autocorrect' do
+  Dir.chdir(__dir__) do
+    sh 'bundle check || bundle install -j4'
+    sh 'bundle exec rubocop -A'
+  end
+end
+
+desc 'Run tests and linting'
+task test: ['rubocop', 'test:integration']
 
 desc 'compile binary'
 task compile: :all
@@ -103,14 +124,14 @@ CROSS_TARGETS.each do |target|
 
       FileUtils.mkdir_p('mitamae-build')
       os, arch = target.split('-', 2)
-      
+
       # Handle Windows executables with .exe extension
       bin = if os == 'windows'
               "mitamae-build/mitamae-#{arch}-#{os}.exe"
             else
               "mitamae-build/mitamae-#{arch}-#{os}"
             end
-      
+
       # Copy the binary from build directory
       source_bin = if os == 'windows'
                      "mruby/build/#{target.shellescape}/bin/mitamae.exe"
@@ -127,7 +148,7 @@ CROSS_TARGETS.each do |target|
           elsif system('which i686-w64-mingw32-strip >/dev/null 2>&1') && arch == 'i386'
             sh "i686-w64-mingw32-strip --strip-unneeded #{bin.shellescape}"
           else
-            puts "Warning: No appropriate strip command found for Windows binaries"
+            puts 'Warning: No appropriate strip command found for Windows binaries'
           end
         else
           sh "strip --strip-unneeded #{bin.shellescape}"

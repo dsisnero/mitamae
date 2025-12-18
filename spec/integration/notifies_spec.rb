@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe 'notifies attribute' do
@@ -6,7 +8,7 @@ describe 'notifies attribute' do
   end
 
   describe file('/tmp/notifies') do
-    it { should be_file }
-    its(:content) { should eq("2431") }
+    it { is_expected.to be_file }
+    its(:content) { is_expected.to eq('2431') }
   end
 end

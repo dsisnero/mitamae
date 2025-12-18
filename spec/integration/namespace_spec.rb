@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe 'namespace' do
@@ -6,15 +8,15 @@ describe 'namespace' do
   end
 
   describe file('/tmp/toplevel_module') do
-    it { should exist }
-    it { should be_file }
-    its(:content) { should eq 'helper' }
+    it { is_expected.to exist }
+    it { is_expected.to be_file }
+    its(:content) { is_expected.to eq 'helper' }
   end
 
   describe file('/tmp/instance_variables') do
-    it { should exist }
-    it { should be_file }
+    it { is_expected.to exist }
+    it { is_expected.to be_file }
     # @recipe is for backward compatibility. @variables should not be defined.
-    its(:content) { should eq '[:@recipe, :@variables]' }
+    its(:content) { is_expected.to eq '[:@recipe, :@variables]' }
   end
 end

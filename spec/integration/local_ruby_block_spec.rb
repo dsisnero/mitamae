@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe 'local_ruby_block resource' do
@@ -6,14 +8,14 @@ describe 'local_ruby_block resource' do
   end
 
   describe file('/tmp/local_ruby_block_executed') do
-    it { should be_file }
+    it { is_expected.to be_file }
   end
 
   describe file('/tmp/local_ruby_block_notified') do
-    it { should be_file }
+    it { is_expected.to be_file }
   end
 
   describe file('/tmp/local_ruby_block_nothing') do
-    it { should_not be_file }
+    it { is_expected.not_to be_file }
   end
 end

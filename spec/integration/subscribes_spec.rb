@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe 'subscribes attribute' do
@@ -6,16 +8,16 @@ describe 'subscribes attribute' do
   end
 
   describe file('/tmp/subscribes') do
-    it { should be_file }
-    its(:content) { should eq("2431") }
+    it { is_expected.to be_file }
+    its(:content) { is_expected.to eq('2431') }
   end
 
   describe file('/tmp/subscribes-multi') do
-    it { should be_file }
-    its(:content) { should eq("12") }
+    it { is_expected.to be_file }
+    its(:content) { is_expected.to eq('12') }
   end
 
   describe file('/tmp/subscribed_from_parent') do
-    it { should be_file }
+    it { is_expected.to be_file }
   end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe 'gem_package resource' do
@@ -6,23 +8,23 @@ describe 'gem_package resource' do
   end
 
   describe command('gem list') do
-    its(:stdout) { should include('tzinfo (1.2.2, 1.1.0)') }
+    its(:stdout) { is_expected.to include('tzinfo (1.2.2, 1.1.0)') }
   end
 
   describe command('gem list') do
-    its(:stdout) { should include('unindent (0.9)') }
+    its(:stdout) { is_expected.to include('unindent (0.9)') }
   end
 
   describe command('gem list') do
-    its(:stdout) { should_not include('perf') }
+    its(:stdout) { is_expected.not_to include('perf') }
   end
 
   describe command('ri Rake') do
-    its(:stderr) { should eq("Nothing known about Rake\n") }
+    its(:stderr) { is_expected.to eq("Nothing known about Rake\n") }
   end
 
   describe file('/tmp/bundler_is_installed') do
-    it { should_not be_file }
+    it { is_expected.not_to be_file }
   end
 
   it 'exits abnormally when inexistent gem command is specified' do

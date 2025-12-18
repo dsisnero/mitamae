@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe 'include_recipe' do
@@ -6,7 +8,7 @@ describe 'include_recipe' do
   end
 
   describe file('/tmp/include_counter') do
-    it { should be_file }
-    its(:content) { should eq(".\n") }
+    it { is_expected.to be_file }
+    its(:content) { is_expected.to eq(".\n") }
   end
 end
