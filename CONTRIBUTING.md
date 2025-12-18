@@ -72,6 +72,23 @@ pre-commit install
 pre-commit run --all-files
 ```
 
+### Pre-merge Hook
+
+We provide a pre-merge hook to keep your fork up-to-date with upstream before merging:
+
+```bash
+# Install the pre-merge-upstream hook
+cp scripts/pre-merge-upstream.sh .git/hooks/pre-merge-commit
+chmod +x .git/hooks/pre-merge-commit
+```
+
+This hook will automatically fetch upstream and fast-forward the main branch (default: `master`) when you're on that branch and about to merge. If fast-forward is not possible, the merge will be aborted so you can manually resolve.
+
+Environment variables:
+- `UPSTREAM_REMOTE`: name of upstream remote (default: `upstream`)
+- `MAIN_BRANCH`: name of main branch (default: `master`)
+- `SKIP_PRE_MERGE_UPSTREAM`: set to `1` to skip the hook
+
 ### Testing
 
 mitamae uses integration tests with Docker. To run tests:
