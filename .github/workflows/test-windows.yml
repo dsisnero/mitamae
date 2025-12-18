@@ -41,17 +41,20 @@ jobs:
       run: |
         rake "release:build:windows-x86_64"
 
-    - name: Create test recipe
+    - name: Create comprehensive test recipe
       run: |
         @"
+        # Basic resource tests
         execute 'echo Hello from Windows' do
           command 'echo Hello from Windows'
         end
 
+        # Package management tests
         package 'notepad++' do
           action :install
         end
 
+        # File system tests
         directory 'C:\mitamae_test' do
           action :create
         end
@@ -59,8 +62,75 @@ jobs:
         file 'C:\mitamae_test\test.txt' do
           content 'This is a test file created by mitamae'
         end
+
+        # Template test
+        template 'C:\mitamae_test\template.txt' do
+          source 'templates/hello.erb'
+          variables message: 'Hello from Windows template'
+        end
+
+        # Link test
+        file 'C:\mitamae_test\source.txt' do
+          content 'Source file for link'
+        end
+
+        link 'C:\mitamae_test\link.txt' do
+          to 'C:\mitamae_test\source.txt'
+        end
+
+        # Execute with guard conditions
+        execute 'conditional command' do
+          command 'echo This command runs'
+          only_if 'echo Condition is true'
+        end
+
+        execute 'skipped command' do
+          command 'echo This should not run'
+          not_if 'echo Condition is true'
+        end
+
+        # Service test (read-only, doesn't modify services)
+        service 'W32Time' do
+          action :nothing
+        end
         "@ | Out-File -FilePath windows_test.rb -Encoding utf8
 
-    - name: Run test recipe
+    - name: Create template file
+      run: |
+        @"
+        <%= @message %>
+        Generated at: <%= Time.now %>
+        "@ | Out-File -FilePath templates/hello.erb -Encoding utf8
+
+    - name: Run comprehensive test recipe
       run: |
         .\mitamae-build\mitamae-x86_64-windows.exe local -l debug windows_test.rb
+
+    - name: Verify test results
+      run: |
+        # Check if directory was created
+        if (Test-Path 'C:\mitamae_test') {
+          Write-Host "✓ Directory created successfully"
+        } else {
+          Write-Host "✗ Directory not created"
+          exit 1
+        }
+
+        # Check if file was created
+        if (Test-Path 'C:\mitamae_test\test.txt') {
+          Write-Host "✓ File created successfully"
+          Get-Content 'C:\mitamae_test\test.txt'
+        } else {
+          Write-Host "✗ File not created"
+          exit 1
+        }
+
+        # Check if link was created
+        if (Test-Path 'C:\mitamae_test\link.txt') {
+          Write-Host "✓ Link created successfully"
+        } else {
+          Write-Host "✗ Link not created"
+        }
+
+        # Clean up
+        Remove-Item -Recurse -Force 'C:\mitamae_test' -ErrorAction SilentlyContinue

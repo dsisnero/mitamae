@@ -28,3 +28,14 @@ puts "Command stdout: #{result.stdout}"
 # Test Windows-specific attributes
 puts "Platform: #{node[:platform]}"
 puts "Platform version: #{node[:platform_version]}"
+
+# Test Windows service if running as administrator
+if node[:platform] == 'windows'
+  # Test with a common Windows service that should exist
+  service 'W32Time' do
+    action :nothing
+  end
+
+  # Check service status
+  puts "W32Time service running: #{run_command('sc query W32Time', error: false).stdout.include?('RUNNING')}"
+end

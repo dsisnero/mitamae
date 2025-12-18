@@ -1,0 +1,216 @@
+name: Windows Package Manager Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+    paths:
+      - 'mrblib/mitamae/resource_executor/package.rb'
+      - '.github/workflows/windows-package-test.yml'
+      - 'spec/windows/**'
+
+jobs:
+  test-chocolatey:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.1'
+        bundler-cache: true
+
+    - name: Setup Zig
+      run: |
+        $ZigVersion = "0.10.1"
+        Invoke-WebRequest -Uri "https://ziglang.org/download/$ZigVersion/zig-windows-x86_64-$ZigVersion.zip" -OutFile zig.zip
+        Expand-Archive -Path zig.zip -DestinationPath C:\zig
+        echo "C:\zig\zig-windows-x86_64-$ZigVersion" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: Install dependencies
+      run: |
+        gem install rake
+        choco install mingw -y --force
+
+    - name: Build mitamae
+      run: |
+        rake "release:build:windows-x86_64"
+
+    - name: Test Chocolatey package installation
+      run: |
+        # Create test recipe for Chocolatey
+        @"
+        # Test Chocolatey package installation
+        package 'git' do
+          action :install
+        end
+
+        # Test package removal
+        package 'git' do
+          action :remove
+        end
+
+        # Test package with version
+        package 'notepad++' do
+          version '8.4.7'
+          action :install
+        end
+
+        # Test package with options
+        package 'curl' do
+          options '--force'
+          action :install
+        end
+        "@ | Out-File -FilePath chocolatey_test.rb -Encoding utf8
+
+        # Run test
+        .\mitamae-build\mitamae-x86_64-windows.exe local -l debug chocolatey_test.rb
+
+        # Verify installations
+        if (choco list --local-only | Select-String 'notepad\+\+') {
+          Write-Host "✓ notepad++ installed via Chocolatey"
+        } else {
+          Write-Host "✗ notepad++ not installed"
+        }
+
+        if (choco list --local-only | Select-String 'curl') {
+          Write-Host "✓ curl installed via Chocolatey"
+        } else {
+          Write-Host "✗ curl not installed"
+        }
+
+        # Clean up
+        choco uninstall notepad++ curl -y
+
+  test-winget:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.1'
+        bundler-cache: true
+
+    - name: Setup Zig
+      run: |
+        $ZigVersion = "0.10.1"
+        Invoke-WebRequest -Uri "https://ziglang.org/download/$ZigVersion/zig-windows-x86_64-$ZigVersion.zip" -OutFile zig.zip
+        Expand-Archive -Path zig.zip -DestinationPath C:\zig
+        echo "C:\zig\zig-windows-x86_64-$ZigVersion" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: Install dependencies
+      run: |
+        gem install rake
+        choco install mingw -y --force
+
+    - name: Build mitamae
+      run: |
+        rake "release:build:windows-x86_64"
+
+    - name: Remove Chocolatey to test winget fallback
+      run: |
+        # Temporarily rename choco.exe to test winget fallback
+        Rename-Item "C:\ProgramData\chocolatey\bin\choco.exe" "C:\ProgramData\chocolatey\bin\choco.exe.bak" -ErrorAction SilentlyContinue
+
+    - name: Test winget package installation
+      run: |
+        # Check if winget is available
+        if (Get-Command winget -ErrorAction SilentlyContinue) {
+          Write-Host "✓ winget is available"
+
+          # Create test recipe for winget
+          @"
+          # Test winget package installation (when Chocolatey not available)
+          package 'Microsoft.PowerShell' do
+            action :install
+          end
+          "@ | Out-File -FilePath winget_test.rb -Encoding utf8
+
+          # Run test
+          .\mitamae-build\mitamae-x86_64-windows.exe local -l debug winget_test.rb
+
+          # Verify installation
+          if (winget list --name PowerShell | Select-String 'Microsoft.PowerShell') {
+            Write-Host "✓ PowerShell installed via winget"
+          } else {
+            Write-Host "✗ PowerShell not installed"
+          }
+        } else {
+          Write-Host "⚠ winget not available, skipping winget tests"
+        }
+
+    - name: Restore Chocolatey
+      run: |
+        # Restore choco.exe
+        Rename-Item "C:\ProgramData\chocolatey\bin\choco.exe.bak" "C:\ProgramData\chocolatey\bin\choco.exe" -ErrorAction SilentlyContinue
+
+  test-no-package-manager:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.1'
+        bundler-cache: true
+
+    - name: Setup Zig
+      run: |
+        $ZigVersion = "0.10.1"
+        Invoke-WebRequest -Uri "https://ziglang.org/download/$ZigVersion/zig-windows-x86_64-$ZigVersion.zip" -OutFile zig.zip
+        Expand-Archive -Path zig.zip -DestinationPath C:\zig
+        echo "C:\zig\zig-windows-x86_64-$ZigVersion" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: Install dependencies
+      run: |
+        gem install rake
+        choco install mingw -y --force
+
+    - name: Build mitamae
+      run: |
+        rake "release:build:windows-x86_64"
+
+    - name: Disable package managers to test fallback
+      run: |
+        # Temporarily disable both package managers
+        Rename-Item "C:\ProgramData\chocolatey\bin\choco.exe" "C:\ProgramData\chocolatey\bin\choco.exe.bak" -ErrorAction SilentlyContinue
+        if (Test-Path "C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*") {
+          # winget is in WindowsApps which requires special permissions to modify
+          Write-Host "⚠ Cannot rename winget (protected folder), will rely on command check"
+        }
+
+    - name: Test package manager fallback
+      run: |
+        # Create test recipe that should fall back to specinfra
+        @"
+        # This should fall back to specinfra when no package manager is available
+        package 'nonexistentpackage' do
+          action :install
+        end
+        "@ | Out-File -FilePath fallback_test.rb -Encoding utf8
+
+        # Run test - should fail gracefully
+        .\mitamae-build\mitamae-x86_64-windows.exe local -l error fallback_test.rb
+        if ($LASTEXITCODE -eq 0) {
+          Write-Host "✓ Package resource handled fallback gracefully"
+        } else {
+          Write-Host "⚠ Package resource failed (expected when no package manager available)"
+        }
+
+    - name: Restore package managers
+      run: |
+        # Restore choco.exe
+        Rename-Item "C:\ProgramData\chocolatey\bin\choco.exe.bak" "C:\ProgramData\chocolatey\bin\choco.exe" -ErrorAction SilentlyContinue

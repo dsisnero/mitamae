@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         target: [windows-x86_64, windows-i386]
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -33,7 +33,7 @@ jobs:
     - name: Install dependencies
       run: |
         gem install rake
-        
+
         # Install MinGW tools for strip command
         if ("${{ matrix.target }}" -eq "windows-x86_64") {
           choco install mingw -y --force
@@ -49,6 +49,24 @@ jobs:
       run: |
         $binary = if ("${{ matrix.target }}" -eq "windows-x86_64") { "mitamae-build\mitamae-x86_64-windows.exe" } else { "mitamae-build\mitamae-i386-windows.exe" }
         & $binary version
+
+        # Test basic functionality
+        & $binary local -l error - << 'EOF'
+        execute 'test echo' do
+          command 'echo Basic functionality test'
+        end
+
+        directory 'C:\mitamae_build_test' do
+          action :create
+        end
+
+        file 'C:\mitamae_build_test\build_test.txt' do
+          content 'Build test successful'
+        end
+        EOF
+
+        # Clean up
+        Remove-Item -Recurse -Force 'C:\mitamae_build_test' -ErrorAction SilentlyContinue
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
