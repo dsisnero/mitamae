@@ -37,6 +37,9 @@ jobs:
         gem install rake
         choco install mingw -y --force
 
+        # Install pkg-config for library detection
+        choco install pkg-config -y --force
+
         # Install oniguruma for mruby-onig-regexp
         # Try vcpkg first, fall back to building from source if needed
         if (Test-Path "C:\vcpkg\vcpkg.exe") {
@@ -52,6 +55,7 @@ jobs:
     - name: Build mitamae
       env:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
+        PKG_CONFIG_PATH: "C:/vcpkg/packages/oniguruma_x64-windows/lib/pkgconfig;C:/vcpkg/installed/x64-windows/lib/pkgconfig"
       run: |
         rake "release:build:windows-x86_64"
 
