@@ -150,7 +150,19 @@ jobs:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
         PKG_CONFIG_PATH: "C:/vcpkg/packages/oniguruma_x64-windows/lib/pkgconfig;C:/vcpkg/installed/x64-windows/lib/pkgconfig"
       run: |
-        rake "release:build:windows-x86_64"
+        # Create junction to shorten paths for Windows command line limits
+        $shortPath = "C:\m"
+        if (Test-Path $shortPath) { Remove-Item $shortPath -Force -Recurse }
+        New-Item -ItemType Junction -Path $shortPath -Target (Get-Location).Path
+
+        try {
+          # Build from shortened path to reduce command line length
+          Set-Location $shortPath
+          rake "release:build:windows-x86_64"
+        } finally {
+          # Clean up junction
+          Remove-Item $shortPath -Force -Recurse
+        }
 
     - name: Remove Chocolatey to test winget fallback
       run: |
@@ -223,14 +235,27 @@ jobs:
           choco install oniguruma -y --force 2>&1 | Out-Null
           if ($LASTEXITCODE -ne 0) {
             Write-Host "Oniguruma not available via package manager, mruby will bundle it"
-          }
         }
+
     - name: Build mitamae
       env:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
         PKG_CONFIG_PATH: "C:/vcpkg/packages/oniguruma_x64-windows/lib/pkgconfig;C:/vcpkg/installed/x64-windows/lib/pkgconfig"
       run: |
-        rake "release:build:windows-x86_64"
+        # Create junction to shorten paths for Windows command line limits
+        $shortPath = "C:\m"
+        if (Test-Path $shortPath) { Remove-Item $shortPath -Force -Recurse }
+        New-Item -ItemType Junction -Path $shortPath -Target (Get-Location).Path
+
+        try {
+          # Build from shortened path to reduce command line length
+          Set-Location $shortPath
+          rake "release:build:windows-x86_64"
+        } finally {
+          # Clean up junction
+          Remove-Item $shortPath -Force -Recurse
+        }
+
 
     - name: Disable package managers to test fallback
       run: |

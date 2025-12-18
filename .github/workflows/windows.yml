@@ -67,7 +67,19 @@ jobs:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
         PKG_CONFIG_PATH: "C:/vcpkg/packages/oniguruma_${{ matrix.target == 'windows-x86_64' && 'x64-windows' || 'x86-windows' }}/lib/pkgconfig;C:/vcpkg/installed/${{ matrix.target == 'windows-x86_64' && 'x64-windows' || 'x86-windows' }}/lib/pkgconfig"
       run: |
-        rake "release:build:${{ matrix.target }}"
+        # Create junction to shorten paths for Windows command line limits
+        $shortPath = "C:\m"
+        if (Test-Path $shortPath) { Remove-Item $shortPath -Force -Recurse }
+        New-Item -ItemType Junction -Path $shortPath -Target (Get-Location).Path
+
+        try {
+          # Build from shortened path to reduce command line length
+          Set-Location $shortPath
+          rake "release:build:${{ matrix.target }}"
+        } finally {
+          # Clean up junction
+          Remove-Item $shortPath -Force -Recurse
+        }
 
     - name: Test binary
       run: |
