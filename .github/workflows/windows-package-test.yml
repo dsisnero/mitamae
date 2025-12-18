@@ -150,10 +150,12 @@ jobs:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
         PKG_CONFIG_PATH: "C:/vcpkg/packages/oniguruma_x64-windows/lib/pkgconfig;C:/vcpkg/installed/x64-windows/lib/pkgconfig"
       run: |
-        # Create junction to shorten paths for Windows command line limits
-        $shortPath = "C:\m"
+        # Create junction on same drive to shorten paths for Windows command line limits
+        $currentDir = (Get-Location).Path
+        $drive = $currentDir.Substring(0, 1)
+        $shortPath = "$drive`:\m"
         if (Test-Path $shortPath) { Remove-Item $shortPath -Force -Recurse }
-        New-Item -ItemType Junction -Path $shortPath -Target (Get-Location).Path
+        New-Item -ItemType Junction -Path $shortPath -Target $currentDir
 
         try {
           # Build from shortened path to reduce command line length
@@ -242,10 +244,12 @@ jobs:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
         PKG_CONFIG_PATH: "C:/vcpkg/packages/oniguruma_x64-windows/lib/pkgconfig;C:/vcpkg/installed/x64-windows/lib/pkgconfig"
       run: |
-        # Create junction to shorten paths for Windows command line limits
-        $shortPath = "C:\m"
+        # Create junction on same drive to shorten paths for Windows command line limits
+        $currentDir = (Get-Location).Path
+        $drive = $currentDir.Substring(0, 1)
+        $shortPath = "$drive`:\m"
         if (Test-Path $shortPath) { Remove-Item $shortPath -Force -Recurse }
-        New-Item -ItemType Junction -Path $shortPath -Target (Get-Location).Path
+        New-Item -ItemType Junction -Path $shortPath -Target $currentDir
 
         try {
           # Build from shortened path to reduce command line length
