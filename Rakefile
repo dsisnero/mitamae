@@ -508,7 +508,11 @@ ENV['MRUBY_CONFIG'] = mruby_config
 puts "DEBUG: mruby_root = #{mruby_root}"
 puts "DEBUG: Dir.exist?(mruby_root) = #{Dir.exist?(mruby_root)}"
 puts "DEBUG: Listing mruby_root parent: #{Dir.entries(File.dirname(mruby_root)).join(', ')}" if File.exist?(File.dirname(mruby_root))
-Rake::Task[:mruby].invoke unless Dir.exist?(mruby_root)
+if Dir.exist?(mruby_root) && !File.exist?("#{mruby_root}/Rakefile")
+  puts "DEBUG: mruby directory exists but Rakefile missing, removing directory"
+  FileUtils.rm_rf(mruby_root)
+end
+Rake::Task[:mruby].invoke unless File.exist?("#{mruby_root}/Rakefile")
 puts "DEBUG: After task invocation, Dir.exist?(mruby_root) = #{Dir.exist?(mruby_root)}"
 Dir.chdir(mruby_root)
 puts "DEBUG: Checking if Rakefile exists: #{File.exist?('Rakefile')}"
