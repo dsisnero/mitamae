@@ -52,7 +52,7 @@ MRUBY_COMMAND_PATCH = <<~'PATCH'
   +      response_file = nil
   +      if infiles.size > 100
   +        puts "MRBC: Creating response file for #{infiles.size} files (Windows command line limit workaround)"
-  +        response_file = Tempfile.new(['mrbc', '.rsp'])
+  +        response_file = ::Tempfile.new(['mrbc', '.rsp'])
   +        infiles.each { |path| response_file.puts filename(path) }
   +        response_file.close
   +        puts "MRBC: Response file created at #{response_file.path}"
@@ -146,7 +146,7 @@ Rake::Task[:mruby].invoke unless File.exist?("#{mruby_root}/Rakefile")
 if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
   puts "DEBUG: Applying mruby patches for version #{MRUBY_VERSION}"
   patch_cmd = RUBY_PLATFORM.include?('solaris') ? 'gpatch' : 'patch'
-  
+
   # Apply build.rb patch (PR #5318) only if not already patched
   build_patch_file = "#{mruby_root}/lib/mruby/build.rb"
   if File.exist?(build_patch_file)
@@ -163,7 +163,7 @@ if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
       puts "DEBUG: mruby build patch already applied, skipping"
     end
   end
-  
+
   # Apply command.rb patch (Windows response file support) only if not already patched
   command_patch_file = "#{mruby_root}/lib/mruby/build/command.rb"
   if File.exist?(command_patch_file)
@@ -180,7 +180,7 @@ if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
       puts "DEBUG: mruby command patch already applied, skipping"
     end
   end
-  
+
   # Verify patch applied
   patched_file = "#{mruby_root}/lib/mruby/build/command.rb"
   if File.exist?(patched_file)
