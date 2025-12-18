@@ -412,10 +412,12 @@ file :mruby do
         -        out.puts io.read
         +
          +      puts "MRBC PATCHED: Processing #{infiles.size} files"
-        +      puts "MRBC: First file: #{filename(infiles.first)}" if infiles.size > 0
+         +      File.write('mrbc_debug.txt', "infiles.size = #{infiles.size}")
+         +      puts "MRBC: First file: #{filename(infiles.first)}" if infiles.size > 0
         +      response_file = nil
         +      if infiles.size > 100
         +        puts "MRBC: Creating response file for #{infiles.size} files (Windows command line limit workaround)"
+        +        File.write('mrbc_response_triggered.txt', 'yes')
         +        response_file = Tempfile.new(['mrbc', '.rsp'])
         +        infiles.each { |path| response_file.puts filename(path) }
         +        response_file.close
