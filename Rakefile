@@ -509,6 +509,8 @@ puts "DEBUG: Listing mruby_root parent: #{Dir.entries(File.dirname(mruby_root)).
 Rake::Task[:mruby].invoke unless Dir.exist?(mruby_root)
 puts "DEBUG: After task invocation, Dir.exist?(mruby_root) = #{Dir.exist?(mruby_root)}"
 Dir.chdir(mruby_root)
+puts "DEBUG: Checking if Rakefile exists: #{File.exist?('Rakefile')}"
+puts "DEBUG: Listing mruby directory: #{Dir.entries('.').join(', ')}"
 puts "DEBUG: Loading Rakefile from #{mruby_root}/Rakefile"
 load "#{mruby_root}/Rakefile"
 
