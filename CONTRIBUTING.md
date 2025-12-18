@@ -89,6 +89,30 @@ Environment variables:
 - `MAIN_BRANCH`: name of main branch (default: `master`)
 - `SKIP_PRE_MERGE_UPSTREAM`: set to `1` to skip the hook
 
+### Code Quality Tools
+
+We provide additional scripts to help maintain code quality:
+
+#### Fix Trailing Whitespace
+
+The `fix-trailing-whitespace.sh` script removes trailing whitespace from text files:
+
+```bash
+# Dry run to see what would be changed
+./scripts/fix-trailing-whitespace.sh -d
+
+# Fix trailing whitespace in specific files
+./scripts/fix-trailing-whitespace.sh path/to/file1 path/to/file2
+
+# Fix trailing whitespace in all tracked files
+./scripts/fix-trailing-whitespace.sh
+
+# Verbose output
+./scripts/fix-trailing-whitespace.sh -v
+```
+
+The script is cross-platform and works on Linux, macOS, and Windows (with Git Bash or WSL). It automatically detects binary files and skips them.
+
 ### Testing
 
 mitamae uses integration tests with Docker. To run tests:
