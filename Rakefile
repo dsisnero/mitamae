@@ -411,7 +411,7 @@ file :mruby do
         -      IO.popen(cmd, 'r+') do |io|
         -        out.puts io.read
         +
-        +      puts "MRBC: Processing #{infiles.size} files"
+         +      puts "MRBC PATCHED: Processing #{infiles.size} files"
         +      puts "MRBC: First file: #{filename(infiles.first)}" if infiles.size > 0
         +      response_file = nil
         +      if infiles.size > 100
@@ -420,9 +420,10 @@ file :mruby do
         +        infiles.each { |path| response_file.puts filename(path) }
         +        response_file.close
         +        puts "MRBC: Response file created at #{response_file.path}"
-        +        infiles = ["@#{response_file.path}"]
+         +        infiles = ["@#{response_file.path}"]
+         +        puts "MRBC: New infiles = #{infiles.inspect}"
         +      else
-        +        puts 'MRBC: Not using response file (file count <= 100)'
+         +        puts "MRBC: Not using response file (file count = #{infiles.size})"
                end
         -      # if mrbc execution fail, drop the file
         -      unless $?.success?
@@ -510,7 +511,12 @@ puts "DEBUG: Dir.exist?(mruby_root) = #{Dir.exist?(mruby_root)}"
 puts "DEBUG: Listing mruby_root parent: #{Dir.entries(File.dirname(mruby_root)).join(', ')}" if File.exist?(File.dirname(mruby_root))
 if Dir.exist?(mruby_root) && !File.exist?("#{mruby_root}/Rakefile")
   puts "DEBUG: mruby directory exists but Rakefile missing, removing directory"
+  puts "DEBUG: Before removal, directory listing: #{Dir.entries(mruby_root).join(', ')}"
   FileUtils.rm_rf(mruby_root)
+  puts "DEBUG: After removal, Dir.exist?(mruby_root) = #{Dir.exist?(mruby_root)}"
+  if Dir.exist?(mruby_root)
+    puts "DEBUG: ERROR: Directory still exists after rm_rf!"
+  end
 end
 Rake::Task[:mruby].invoke unless File.exist?("#{mruby_root}/Rakefile")
 puts "DEBUG: After task invocation, Dir.exist?(mruby_root) = #{Dir.exist?(mruby_root)}"
