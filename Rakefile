@@ -6,11 +6,15 @@ require 'shellwords'
 MRUBY_VERSION = '3.0.0'
 
 file :mruby do
+  puts "DEBUG: Running :mruby task, downloading mruby #{MRUBY_VERSION}"
   if RUBY_PLATFORM.include?('solaris')
+    puts "DEBUG: Using git clone for solaris"
     sh "git clone --branch=#{MRUBY_VERSION} https://github.com/mruby/mruby"
     patch = 'gpatch'
   else
+    puts "DEBUG: Using curl to download mruby tarball"
     sh "curl -L --fail --retry 3 --retry-delay 1 https://github.com/mruby/mruby/archive/#{MRUBY_VERSION}.tar.gz -s -o - | tar zxf -"
+    puts "DEBUG: Moving mruby-#{MRUBY_VERSION} to mruby"
     FileUtils.mv("mruby-#{MRUBY_VERSION}", 'mruby')
     patch = 'patch'
   end
@@ -71,8 +75,13 @@ mruby_root = File.expand_path(ENV['MRUBY_ROOT'] || "#{Dir.pwd}/mruby")
 mruby_config = File.expand_path(ENV['MRUBY_CONFIG'] || 'build_config.rb')
 ENV['MRUBY_ROOT'] = mruby_root
 ENV['MRUBY_CONFIG'] = mruby_config
+puts "DEBUG: mruby_root = #{mruby_root}"
+puts "DEBUG: Dir.exist?(mruby_root) = #{Dir.exist?(mruby_root)}"
+puts "DEBUG: Listing mruby_root parent: #{Dir.entries(File.dirname(mruby_root)).join(', ')}" if File.exist?(File.dirname(mruby_root))
 Rake::Task[:mruby].invoke unless Dir.exist?(mruby_root)
+puts "DEBUG: After task invocation, Dir.exist?(mruby_root) = #{Dir.exist?(mruby_root)}"
 Dir.chdir(mruby_root)
+puts "DEBUG: Loading Rakefile from #{mruby_root}/Rakefile"
 load "#{mruby_root}/Rakefile"
 
 desc 'run serverspec'
