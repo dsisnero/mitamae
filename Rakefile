@@ -231,7 +231,7 @@ if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
         if decl_pos
           line_end = content.index("\n", decl_pos)
           if line_end
-            content.insert(line_end + 1, "\n/* Force linker to include load_response_file */\nstatic int (*volatile dummy_load_response_file)(mrb_state*, struct mrbc_args*, const char*) = load_response_file;\n")
+            content.insert(line_end + 1, "\n/* Force linker to include load_response_file */\nstatic int (*volatile dummy_load_response_file)(mrb_state*, struct mrbc_args*, const char*) __attribute__((used)) = load_response_file;\n")
             modified = true
             puts "DEBUG: Added dummy_load_response_file variable"
           end
@@ -243,7 +243,7 @@ if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
       partial_hook_start = content.index('static int\npartial_hook')
       if partial_hook_start
         load_response_func = <<~'C'.gsub(/^/, '')
-int __attribute__((used))
+int __attribute__((used, noinline))
 load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path)
 {
   #warning "load_response_file is being compiled"
