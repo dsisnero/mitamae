@@ -214,8 +214,31 @@ if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
     unless content.include?('response_argv')
       # Add fields to struct mrbc_args
       content.sub!(/unsigned int flags    : 4;\n/, "unsigned int flags    : 4;\n  char **response_argv;\n  int response_argc;\n")
+      # Add forward declaration of load_response_file if not present
+      unless content.include?('load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path);')
+        # Insert after struct mrbc_args definition
+        struct_end = content.index('};')
+        if struct_end
+          content.insert(struct_end + 2, "\nint load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path);\n")
+          modified = true
+          puts "DEBUG: Added forward declaration of load_response_file"
+        end
+      end
+      # Add dummy variable to force linker inclusion
+      unless content.include?('dummy_load_response_file')
+        # Insert after forward declaration
+        decl_pos = content.index('load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path);')
+        if decl_pos
+          line_end = content.index("\n", decl_pos)
+          if line_end
+            content.insert(line_end + 1, "\n/* Force linker to include load_response_file */\nstatic int (*volatile dummy_load_response_file)(mrb_state*, struct mrbc_args*, const char*) = load_response_file;\n")
+            modified = true
+            puts "DEBUG: Added dummy_load_response_file variable"
+          end
+        end
+      end
       # Modify cleanup function
-      content.sub!(/  mrb_free\(mrb, \(void\*\)args->outfile\);\n  mrb_close\(mrb\);\n/, "  mrb_free(mrb, (void*)args->outfile);\n  if (args->response_argv) {\n    int i;\n    for (i = 0; i < args->response_argc; ++i) {\n      mrb_free(mrb, args->response_argv[i]);\n    }\n    mrb_free(mrb, args->response_argv);\n    args->response_argv = NULL;\n  }\n  /* Dummy reference to keep load_response_file in binary */\n  if (0) load_response_file(NULL, NULL, NULL);\n  mrb_close(mrb);\n")
+      content.sub!(/  mrb_free\(mrb, \(void\*\)args->outfile\);\n  mrb_close\(mrb\);\n/, "  mrb_free(mrb, (void*)args->outfile);\n  if (args->response_argv) {\n    int i;\n    for (i = 0; i < args->response_argc; ++i) {\n      mrb_free(mrb, args->response_argv[i]);\n    }\n    mrb_free(mrb, args->response_argv);\n    args->response_argv = NULL;\n  }\n  /* Reference to keep load_response_file in binary */\n  (void)load_response_file;\n  (void)dummy_load_response_file;\n  mrb_close(mrb);\n")
       # Add load_response_file function before partial_hook
       partial_hook_start = content.index('static int\npartial_hook')
       if partial_hook_start
@@ -273,16 +296,7 @@ load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path
       end
     end
 
-    # Add forward declaration of load_response_file if not present
-    unless content.include?('load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path);')
-      # Insert after struct mrbc_args definition
-      struct_end = content.index('};')
-      if struct_end
-        content.insert(struct_end + 2, "\nint load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path);\n")
-        modified = true
-        puts "DEBUG: Added forward declaration of load_response_file"
-      end
-    end
+
 
     if modified
       File.write(mrbc_patch_file, content)
