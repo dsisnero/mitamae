@@ -164,8 +164,24 @@ if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
     end
   end
 
-  # Apply command.rb patch (Windows response file support) only if not already patched
+  # Ensure command.rb has require 'tempfile' for response file support
   command_patch_file = "#{mruby_root}/lib/mruby/build/command.rb"
+  if File.exist?(command_patch_file)
+    content = File.read(command_patch_file)
+    # Check if any require for tempfile exists (with single or double quotes)
+    unless content =~ /require\s+['"]tempfile['"]/
+      lines = content.lines
+      # Insert after require 'forwardable' line
+      require_line_index = lines.index { |line| line.include?("require 'forwardable'") }
+      if require_line_index
+        lines.insert(require_line_index + 1, "require 'tempfile'\n")
+        File.write(command_patch_file, lines.join)
+        puts "DEBUG: Added require 'tempfile' to command.rb"
+      end
+    end
+  end
+
+  # Apply command.rb patch (Windows response file support) only if not already patched
   if File.exist?(command_patch_file)
     content = File.read(command_patch_file)
     unless content.include?('MRBC: Processing')
