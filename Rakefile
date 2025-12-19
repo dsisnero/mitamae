@@ -231,7 +231,7 @@ if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
         if decl_pos
           line_end = content.index("\n", decl_pos)
           if line_end
-            content.insert(line_end + 1, "\n/* Force linker to include load_response_file */\nint (*volatile dummy_load_response_file)(mrb_state*, struct mrbc_args*, const char*) __attribute__((used, section(\".data\"))) = load_response_file;\nstatic void* force_include[] __attribute__((used)) = { (void*)dummy_load_response_file };\n__attribute__((constructor)) static void force_load_response_file_constructor(void) {\n    volatile static int (*ptr)(mrb_state*, struct mrbc_args*, const char*) = load_response_file;\n    (void)ptr;\n}\n")
+            content.insert(line_end + 1, "\n/* Force linker to include load_response_file */\nint (*volatile dummy_load_response_file)(mrb_state*, struct mrbc_args*, const char*) __attribute__((used)) = load_response_file;\n__attribute__((constructor)) static void force_load_response_file_constructor(void) {\n    volatile static int (*ptr)(mrb_state*, struct mrbc_args*, const char*) = load_response_file;\n    (void)ptr;\n}\n")
             modified = true
             puts "DEBUG: Added dummy_load_response_file variable"
           end
