@@ -204,7 +204,64 @@ if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
     unless content.include?('MRBC: Processing')
       raise "Patch verification failed: command.rb not properly patched"
     end
-    puts "DEBUG: mruby patches verified"
+    # Patch mrbc.c to support @response files
+  mrbc_patch_file = "#{mruby_root}/mrbgems/mruby-bin-mrbc/tools/mrbc/mrbc.c"
+  if File.exist?(mrbc_patch_file)
+    content = File.read(mrbc_patch_file)
+    # Check if already patched
+    unless content.include?('response_argv')
+      # Add fields to struct mrbc_args
+      content.sub!(/unsigned int flags    : 4;\n/, "unsigned int flags    : 4;\n  char **response_argv;\n  int response_argc;\n")
+      # Modify cleanup function
+      content.sub!(/  mrb_free\(mrb, \(void\*\)args->outfile\);\n  mrb_close\(mrb\);\n/, "  mrb_free(mrb, (void*)args->outfile);\n  if (args->response_argv) {\n    int i;\n    for (i = 0; i < args->response_argc; ++i) {\n      mrb_free(mrb, args->response_argv[i]);\n    }\n    mrb_free(mrb, args->response_argv);\n    args->response_argv = NULL;\n  }\n  mrb_close(mrb);\n")
+      # Add load_response_file function before partial_hook
+      partial_hook_start = content.index('static int\npartial_hook')
+      if partial_hook_start
+        load_response_func = <<~'C'.gsub(/^/, '')
+static int
+load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path)
+{
+  FILE *f = fopen(resp_path, "r");
+  if (!f) return 0;
+  int count = 0;
+  char line[1024];
+  while (fgets(line, sizeof(line), f)) {
+    char *p = strchr(line, '\n');
+    if (p) *p = '\0';
+    if (line[0] == '\0') continue;
+    count++;
+  }
+  rewind(f);
+  char **lines = mrb_malloc(mrb, sizeof(char*) * count);
+  int i = 0;
+  while (fgets(line, sizeof(line), f)) {
+    char *p = strchr(line, '\n');
+    if (p) *p = '\0';
+    if (line[0] == '\0') continue;
+    lines[i] = mrb_malloc(mrb, strlen(line) + 1);
+    strcpy(lines[i], line);
+    i++;
+  }
+  fclose(f);
+  args->response_argv = lines;
+  args->response_argc = count;
+  args->argv = lines;
+  args->argc = count;
+  args->idx = 0;
+  return 1;
+}
+        C
+        content.insert(partial_hook_start, load_response_func)
+      end
+      # Modify load_file to detect '@'
+      content.sub!(/  char \*input = args->argv\[args->idx\];\n/, "  char *input = args->argv[args->idx];\n  if (input[0] == '@') {\n    if (!load_response_file(mrb, args, input + 1)) {\n      fprintf(stderr, \"%s: cannot open response file. (%s)\\n\", args->prog, input);\n      return mrb_nil_value();\n    }\n    input = args->argv[args->idx];\n  }\n")
+      File.write(mrbc_patch_file, content)
+      puts "DEBUG: Patched mrbc.c with response file support"
+    else
+      puts "DEBUG: mrbc.c already patched, skipping"
+    end
+  end
+  puts "DEBUG: mruby patches verified"
   end
 end
 puts "DEBUG: After task invocation, Dir.exist?(mruby_root) = #{Dir.exist?(mruby_root)}"
