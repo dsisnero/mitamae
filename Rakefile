@@ -208,7 +208,9 @@ if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
   mrbc_patch_file = "#{mruby_root}/mrbgems/mruby-bin-mrbc/tools/mrbc/mrbc.c"
   if File.exist?(mrbc_patch_file)
     content = File.read(mrbc_patch_file)
-    # Check if already patched
+    modified = false
+    
+    # Check if already patched with response_argv fields
     unless content.include?('response_argv')
       # Add fields to struct mrbc_args
       content.sub!(/unsigned int flags    : 4;\n/, "unsigned int flags    : 4;\n  char **response_argv;\n  int response_argc;\n")
@@ -255,10 +257,34 @@ load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path
       end
       # Modify load_file to detect '@'
       content.sub!(/  char \*input = args->argv\[args->idx\];\n/, "  char *input = args->argv[args->idx];\n  if (input[0] == '@') {\n    if (!load_response_file(mrb, args, input + 1)) {\n      fprintf(stderr, \"%s: cannot open response file. (%s)\\n\", args->prog, input);\n      return mrb_nil_value();\n    }\n    input = args->argv[args->idx];\n  }\n")
-      File.write(mrbc_patch_file, content)
+      modified = true
       puts "DEBUG: Patched mrbc.c with response file support"
     else
       puts "DEBUG: mrbc.c already patched, skipping"
+    end
+    
+    # Ensure stdio.h is included (required for FILE, fopen, fprintf, stderr)
+    unless content.include?('#include <stdio.h>')
+      # Insert after #include <string.h> line
+      if content.sub!(/#include <string.h>\n/, "#include <string.h>\n#include <stdio.h>\n")
+        modified = true
+        puts "DEBUG: Added #include <stdio.h> to mrbc.c"
+      end
+    end
+    
+    # Add forward declaration of load_response_file if not present
+    unless content.include?('load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path);')
+      # Insert after struct mrbc_args definition
+      struct_end = content.index('};')
+      if struct_end
+        content.insert(struct_end + 2, "\nstatic int load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path);\n")
+        modified = true
+        puts "DEBUG: Added forward declaration of load_response_file"
+      end
+    end
+    
+    if modified
+      File.write(mrbc_patch_file, content)
     end
   end
   puts "DEBUG: mruby patches verified"
