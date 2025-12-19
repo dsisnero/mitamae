@@ -231,7 +231,7 @@ if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
         if decl_pos
           line_end = content.index("\n", decl_pos)
           if line_end
-            content.insert(line_end + 1, "\n/* Force linker to include load_response_file */\nstatic int (*volatile dummy_load_response_file)(mrb_state*, struct mrbc_args*, const char*) __attribute__((used)) = load_response_file;\n")
+            content.insert(line_end + 1, "\n/* Force linker to include load_response_file */\nint (*volatile dummy_load_response_file)(mrb_state*, struct mrbc_args*, const char*) __attribute__((used, section(\".data\"))) = load_response_file;\nstatic void* force_include[] __attribute__((used)) = { (void*)dummy_load_response_file };\n")
             modified = true
             puts "DEBUG: Added dummy_load_response_file variable"
           end
@@ -285,6 +285,17 @@ load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path
       puts "DEBUG: Patched mrbc.c with response file support"
     else
       puts "DEBUG: mrbc.c already patched, skipping"
+    end
+
+    # Update function signature if already patched but missing attributes
+    if content.include?('load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path)')
+      unless content.include?('__attribute__((used, noinline))')
+        # Replace function signature (with or without existing attributes)
+        if content.sub!(/int\s+load_response_file\(mrb_state \*mrb, struct mrbc_args \*args, const char \*resp_path\)/, 'int __attribute__((used, noinline)) load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path)')
+          modified = true
+          puts "DEBUG: Updated load_response_file signature with attributes"
+        end
+      end
     end
 
     # Ensure stdio.h is included (required for FILE, fopen, fprintf, stderr)
