@@ -237,8 +237,9 @@ if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
           end
         end
       end
+
       # Modify cleanup function
-      content.sub!(/  mrb_free\(mrb, \(void\*\)args->outfile\);\n  mrb_close\(mrb\);\n/, "  mrb_free(mrb, (void*)args->outfile);\n  if (args->response_argv) {\n    int i;\n    for (i = 0; i < args->response_argc; ++i) {\n      mrb_free(mrb, args->response_argv[i]);\n    }\n    mrb_free(mrb, args->response_argv);\n    args->response_argv = NULL;\n  }\n  /* Reference to keep load_response_file in binary */\n  (void)load_response_file;\n  (void)dummy_load_response_file;\n  mrb_close(mrb);\n")
+      content.sub!(/  mrb_free\(mrb, \(void\*\)args->outfile\);\n  mrb_close\(mrb\);\n/, "  mrb_free(mrb, (void*)args->outfile);\n  if (args->response_argv) {\n    int i;\n    for (i = 0; i < args->response_argc; ++i) {\n      mrb_free(mrb, args->response_argv[i]);\n    }\n    mrb_free(mrb, args->response_argv);\n    args->response_argv = NULL;\n  }\n  /* Reference to keep load_response_file in binary */\n  if (0) load_response_file(NULL, NULL, NULL);\n  (void)load_response_file;\n  (void)dummy_load_response_file;\n  mrb_close(mrb);\n")
       # Add load_response_file function before partial_hook
       partial_hook_start = content.index('static int\npartial_hook')
       if partial_hook_start
@@ -286,6 +287,23 @@ load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path
     else
       puts "DEBUG: mrbc.c already patched, skipping"
     end
+
+    # Ensure constructor exists even if dummy variable already present
+    unless content.include?('force_load_response_file_constructor')
+      # Find dummy variable line
+      dummy_pos = content.index('dummy_load_response_file')
+      if dummy_pos
+        line_end = content.index("\n", dummy_pos)
+        if line_end
+          content.insert(line_end + 1, "\n__attribute__((constructor)) static void force_load_response_file_constructor(void) {\n    static int (*ptr)(mrb_state*, struct mrbc_args*, const char*) = load_response_file;\n    (void)ptr;\n}\n")
+          modified = true
+          puts "DEBUG: Added missing constructor"
+        end
+      end
+    end
+
+    # Fix volatile warning in constructor if present
+    content.sub!(/volatile static int \(\*ptr\)\(mrb_state\*, struct mrbc_args\*, const char\*\) = load_response_file;/, 'static int (*ptr)(mrb_state*, struct mrbc_args*, const char*) = load_response_file;')
 
     # Update function signature if already patched but missing attributes
     if content.include?('load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path)')
@@ -386,6 +404,7 @@ CROSS_TARGETS.each do |target|
                    else
                      "mruby/build/#{target.shellescape}/bin/mitamae"
                    end
+
       sh "cp #{source_bin.shellescape} #{bin.shellescape}"
 
       if STRIP_TARGETS.include?(target)
