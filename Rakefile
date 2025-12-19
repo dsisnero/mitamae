@@ -209,20 +209,21 @@ if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
   if File.exist?(mrbc_patch_file)
     content = File.read(mrbc_patch_file)
     modified = false
-    
+
     # Check if already patched with response_argv fields
     unless content.include?('response_argv')
       # Add fields to struct mrbc_args
       content.sub!(/unsigned int flags    : 4;\n/, "unsigned int flags    : 4;\n  char **response_argv;\n  int response_argc;\n")
       # Modify cleanup function
-      content.sub!(/  mrb_free\(mrb, \(void\*\)args->outfile\);\n  mrb_close\(mrb\);\n/, "  mrb_free(mrb, (void*)args->outfile);\n  if (args->response_argv) {\n    int i;\n    for (i = 0; i < args->response_argc; ++i) {\n      mrb_free(mrb, args->response_argv[i]);\n    }\n    mrb_free(mrb, args->response_argv);\n    args->response_argv = NULL;\n  }\n  mrb_close(mrb);\n")
+      content.sub!(/  mrb_free\(mrb, \(void\*\)args->outfile\);\n  mrb_close\(mrb\);\n/, "  mrb_free(mrb, (void*)args->outfile);\n  if (args->response_argv) {\n    int i;\n    for (i = 0; i < args->response_argc; ++i) {\n      mrb_free(mrb, args->response_argv[i]);\n    }\n    mrb_free(mrb, args->response_argv);\n    args->response_argv = NULL;\n  }\n  /* Dummy reference to keep load_response_file in binary */\n  if (0) load_response_file(NULL, NULL, NULL);\n  mrb_close(mrb);\n")
       # Add load_response_file function before partial_hook
       partial_hook_start = content.index('static int\npartial_hook')
       if partial_hook_start
         load_response_func = <<~'C'.gsub(/^/, '')
-static int
+int __attribute__((used))
 load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path)
 {
+  #warning "load_response_file is being compiled"
   FILE *f = fopen(resp_path, "r");
   if (!f) return 0;
   int count = 0;
@@ -262,7 +263,7 @@ load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path
     else
       puts "DEBUG: mrbc.c already patched, skipping"
     end
-    
+
     # Ensure stdio.h is included (required for FILE, fopen, fprintf, stderr)
     unless content.include?('#include <stdio.h>')
       # Insert after #include <string.h> line
@@ -271,18 +272,18 @@ load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path
         puts "DEBUG: Added #include <stdio.h> to mrbc.c"
       end
     end
-    
+
     # Add forward declaration of load_response_file if not present
     unless content.include?('load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path);')
       # Insert after struct mrbc_args definition
       struct_end = content.index('};')
       if struct_end
-        content.insert(struct_end + 2, "\nstatic int load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path);\n")
+        content.insert(struct_end + 2, "\nint load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path);\n")
         modified = true
         puts "DEBUG: Added forward declaration of load_response_file"
       end
     end
-    
+
     if modified
       File.write(mrbc_patch_file, content)
     end
