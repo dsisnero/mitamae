@@ -302,8 +302,85 @@ load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path
       end
     end
 
+    # Ensure dummy_load_response_file variable exists (even if already patched)
+    unless content.include?('dummy_load_response_file')
+      # Find forward declaration of load_response_file
+      decl_pos = content.index('load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path);')
+      if decl_pos
+        line_end = content.index("\n", decl_pos)
+        if line_end
+          content.insert(line_end + 1, "\n/* Force linker to include load_response_file */\nint (*volatile dummy_load_response_file)(mrb_state*, struct mrbc_args*, const char*) __attribute__((used)) = load_response_file;\n")
+          modified = true
+          puts "DEBUG: Added missing dummy_load_response_file variable"
+        end
+      end
+    end
+
+    # Ensure cleanup function handles response_argv (even if already patched)
+    unless content.include?('if (args->response_argv)')
+      # Replace original cleanup function lines with patched version
+      if content.sub!(/  mrb_free\(mrb, \(void\*\)args->outfile\);\n  mrb_close\(mrb\);\n/, "  mrb_free(mrb, (void*)args->outfile);\n  if (args->response_argv) {\n    int i;\n    for (i = 0; i < args->response_argc; ++i) {\n      mrb_free(mrb, args->response_argv[i]);\n    }\n    mrb_free(mrb, args->response_argv);\n    args->response_argv = NULL;\n  }\n  /* Reference to keep load_response_file in binary */\n  if (0) load_response_file(NULL, NULL, NULL);\n  (void)load_response_file;\n  (void)dummy_load_response_file;\n  mrb_close(mrb);\n")
+        modified = true
+        puts "DEBUG: Patched cleanup function with response_argv handling"
+      end
+    end
+
+    # Ensure load_file function handles @response files (even if already patched)
+    unless content.include?('if (input[0] == \'@\')')
+      # Add response file detection to load_file function
+      if content.sub!(/  char \*input = args->argv\[args->idx\];\n/, "  char *input = args->argv[args->idx];\n  if (input[0] == '@') {\n    if (!load_response_file(mrb, args, input + 1)) {\n      fprintf(stderr, \"%s: cannot open response file. (%s)\\n\", args->prog, input);\n      return mrb_nil_value();\n    }\n    input = args->argv[args->idx];\n  }\n")
+        modified = true
+        puts "DEBUG: Patched load_file function with @response detection"
+      end
+    end
+
     # Fix volatile warning in constructor if present
     content.sub!(/volatile static int \(\*ptr\)\(mrb_state\*, struct mrbc_args\*, const char\*\) = load_response_file;/, 'static int (*ptr)(mrb_state*, struct mrbc_args*, const char*) = load_response_file;')
+
+    # Ensure load_response_file function definition exists (even if already patched)
+    unless content.include?('#warning "load_response_file is being compiled"')
+      partial_hook_start = content.index('static int\npartial_hook')
+      if partial_hook_start
+        load_response_func = <<~'C'.gsub(/^/, '')
+int __attribute__((used, noinline))
+load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path)
+{
+  #warning "load_response_file is being compiled"
+  FILE *f = fopen(resp_path, "r");
+  if (!f) return 0;
+  int count = 0;
+  char line[1024];
+  while (fgets(line, sizeof(line), f)) {
+    char *p = strchr(line, '\n');
+    if (p) *p = '\0';
+    if (line[0] == '\0') continue;
+    count++;
+  }
+  rewind(f);
+  char **lines = mrb_malloc(mrb, sizeof(char*) * count);
+  int i = 0;
+  while (fgets(line, sizeof(line), f)) {
+    char *p = strchr(line, '\n');
+    if (p) *p = '\0';
+    if (line[0] == '\0') continue;
+    lines[i] = mrb_malloc(mrb, strlen(line) + 1);
+    strcpy(lines[i], line);
+    i++;
+  }
+  fclose(f);
+  args->response_argv = lines;
+  args->response_argc = count;
+  args->argv = lines;
+  args->argc = count;
+  args->idx = 0;
+  return 1;
+}
+        C
+        content.insert(partial_hook_start, load_response_func)
+        modified = true
+        puts "DEBUG: Added missing load_response_file function definition"
+      end
+    end
 
     # Update function signature if already patched but missing attributes
     if content.include?('load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path)')
