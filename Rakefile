@@ -213,13 +213,13 @@ if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
     # Check if already patched with response_argv fields
     unless content.include?('response_argv')
       # Add fields to struct mrbc_args
-      content.sub!(/unsigned int flags    : 4;\n/, "unsigned int flags    : 4;\n  char **response_argv;\n  int response_argc;\n")
+      content.sub!(/unsigned int flags    : 4;\r?\n/, "unsigned int flags    : 4;\n  char **response_argv;\n  int response_argc;\n")
       # Add forward declaration of load_response_file if not present
       unless content.include?('load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path);')
         # Insert after struct mrbc_args definition
         struct_end = content.index('};')
         if struct_end
-          content.insert(struct_end + 2, "\nint load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path);\n")
+          content.insert(struct_end + 2, "\nstatic int load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path);\n")
           modified = true
           puts "DEBUG: Added forward declaration of load_response_file"
         end
@@ -342,7 +342,7 @@ load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path
       partial_hook_start = content.index('static int\npartial_hook')
       if partial_hook_start
         load_response_func = <<~'C'.gsub(/^/, '')
-int __attribute__((used, noinline))
+static int
 load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path)
 {
   #warning "load_response_file is being compiled"
@@ -382,16 +382,7 @@ load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path
       end
     end
 
-    # Update function signature if already patched but missing attributes
-    if content.include?('load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path)')
-      unless content.include?('__attribute__((used, noinline))')
-        # Replace function signature (with or without existing attributes)
-        if content.sub!(/int\s+load_response_file\(mrb_state \*mrb, struct mrbc_args \*args, const char \*resp_path\)/, 'int __attribute__((used, noinline)) load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path)')
-          modified = true
-          puts "DEBUG: Updated load_response_file signature with attributes"
-        end
-      end
-    end
+    # Function is now static, no need for attribute updates
 
     # Ensure stdio.h is included (required for FILE, fopen, fprintf, stderr)
     unless content.include?('#include <stdio.h>')

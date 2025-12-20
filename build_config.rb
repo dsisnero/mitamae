@@ -34,10 +34,7 @@ MRuby::Build.new do |conf|
 
   debug_config(conf)
   gem_config(conf)
-  # Add undefined reference to force inclusion of load_response_file (GNU ld only)
-  if RUBY_PLATFORM.match?(/linux/)
-    conf.linker.flags << '-Wl,--undefined=load_response_file'
-  end
+  # Function is now static, no need for undefined reference flag
 end
 
 if build_targets.include?('linux-x86_64')
