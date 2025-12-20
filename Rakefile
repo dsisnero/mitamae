@@ -237,7 +237,7 @@ if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
         if decl_pos
           line_end = content.index("\n", decl_pos)
           if line_end
-            content.insert(line_end + 1, "\n/* Force linker to include load_response_file */\nint (*dummy_load_response_file)(mrb_state*, struct mrbc_args*, const char*) __attribute__((used)) = load_response_file;\n__attribute__((constructor)) static void force_load_response_file_constructor(void) {\n    static int (*ptr)(mrb_state*, struct mrbc_args*, const char*) = load_response_file;\n    (void)ptr;\n    __asm__ volatile(\"\" : : \"r\"(load_response_file));\n}\n")
+            content.insert(line_end + 1, "\n/* Force linker to include load_response_file */\nint (*dummy_load_response_file)(mrb_state*, struct mrbc_args*, const char*) __attribute__((used)) = load_response_file;\n__attribute__((constructor)) static void force_load_response_file_constructor(void) {\n    static int (*ptr)(mrb_state*, struct mrbc_args*, const char*) = load_response_file;\n    (void)ptr;\n    __asm__ volatile(\"\" : : \"r\"(load_response_file));\n}\n/* Top-level asm reference to force function emission */\n__asm__ volatile(\"\" : : \"r\"(load_response_file));\n")
             modified = true
             puts "DEBUG: Added dummy_load_response_file variable"
           end
@@ -301,7 +301,7 @@ load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path
       if dummy_pos
         line_end = content.index("\n", dummy_pos)
         if line_end
-          content.insert(line_end + 1, "\n__attribute__((constructor)) static void force_load_response_file_constructor(void) {\n    static int (*ptr)(mrb_state*, struct mrbc_args*, const char*) = load_response_file;\n    (void)ptr;\n    __asm__ volatile(\"\" : : \"r\"(load_response_file));\n}\n")
+          content.insert(line_end + 1, "\n__attribute__((constructor)) static void force_load_response_file_constructor(void) {\n    static int (*ptr)(mrb_state*, struct mrbc_args*, const char*) = load_response_file;\n    (void)ptr;\n    __asm__ volatile(\"\" : : \"r\"(load_response_file));\n}\n/* Top-level asm reference to force function emission */\n__asm__ volatile(\"\" : : \"r\"(load_response_file));\n")
           modified = true
           puts "DEBUG: Added missing constructor"
         end
@@ -315,7 +315,7 @@ load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path
       if decl_pos
         line_end = content.index("\n", decl_pos)
         if line_end
-          content.insert(line_end + 1, "\n/* Force linker to include load_response_file */\nint (*dummy_load_response_file)(mrb_state*, struct mrbc_args*, const char*) __attribute__((used)) = load_response_file;\n")
+          content.insert(line_end + 1, "\n/* Force linker to include load_response_file */\nint (*dummy_load_response_file)(mrb_state*, struct mrbc_args*, const char*) __attribute__((used)) = load_response_file;\n/* Top-level asm reference to force function emission */\n__asm__ volatile(\"\" : : \"r\"(load_response_file));\n")
           modified = true
           puts "DEBUG: Added missing dummy_load_response_file variable"
         end
