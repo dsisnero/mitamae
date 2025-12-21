@@ -26,7 +26,7 @@ MRuby::Gem::Specification.new('mitamae') do |spec|
   spec.add_dependency 'mruby-file-stat',   mgem: 'mruby-file-stat'
   spec.add_dependency 'mruby-hashie',      mgem: 'mruby-hashie'
   spec.add_dependency 'mruby-json',        mgem: 'mruby-json'
-  spec.add_dependency 'mruby-open3',       mgem: 'mruby-open3'
+  spec.add_dependency 'mruby-open3',       github: 'dsisnero/mruby-open3'
   spec.add_dependency 'mruby-optparse',    mgem: 'mruby-optparse'
   spec.add_dependency 'mruby-shellwords',  mgem: 'mruby-shellwords'
   spec.add_dependency 'mruby-specinfra',   mgem: 'mruby-specinfra'
