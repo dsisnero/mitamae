@@ -48,6 +48,18 @@ Dir.mktmpdir("mrbc-response") do |dir|
   run_mrbc(mrbc, ["-Btest_func", "-o", response_out, "@#{rsp}"], "response file")
   abort "response output not created" unless File.exist?(response_out)
 
+  if Gem.win_platform?
+    rsp_win = File.join(dir, "files_windows.rsp")
+    File.open(rsp_win, "w") do |f|
+      files.each { |path| f.puts path.tr("/", "\\") }
+    end
+
+    puts "Testing response file with Windows paths..."
+    response_out_win = File.join(dir, "response_out_win.c")
+    run_mrbc(mrbc, ["-Btest_func", "-o", response_out_win, "@#{rsp_win}"], "response file windows paths")
+    abort "windows response output not created" unless File.exist?(response_out_win)
+  end
+
   puts "Testing direct args with 50 inputs..."
   direct_out = File.join(dir, "direct_out.c")
   run_mrbc(mrbc, ["-Btest_func", "-o", direct_out] + files.take(50), "direct args")

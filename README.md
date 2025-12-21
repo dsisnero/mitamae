@@ -194,6 +194,15 @@ bundle exec rake test:integration
 
 This requires Docker on your local environment.
 
+For the mrbc response file behavior, build mruby and run the helper script:
+
+```
+cd mruby
+rake
+cd ..
+./test_response.rb
+```
+
 ## License
 
 [MIT License](./LICENSE)
