@@ -35,6 +35,7 @@ MRuby::Gem::Specification.new('mitamae') do |spec|
   spec.add_dependency 'mruby-yaml',      github: 'mrbgems/mruby-yaml'
   spec.add_dependency 'mruby-erb',       github: 'k0kubun/mruby-erb'
   spec.add_dependency 'mruby-etc',       github: 'dsisnero/mruby-etc'
+  spec.add_dependency 'mruby-process',   github: 'dsisnero/mruby-process'
   spec.add_dependency 'mruby-uri',       github: 'zzak/mruby-uri'
   spec.add_dependency 'mruby-schash',    github: 'tatsushid/mruby-schash'
 end
