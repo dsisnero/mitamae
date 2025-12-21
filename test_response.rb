@@ -1,78 +1,57 @@
 #!/usr/bin/env ruby
-require 'tempfile'
+require "open3"
+require "tmpdir"
 
-# Mock build object
-class MockBuild
-  def filename(path)
-    path.is_a?(Array) ? path.map { |p| "filename(#{p})" } : "filename(#{path})"
+ROOT = File.expand_path(__dir__)
+
+def resolve_mrbc
+  return ENV["MRBC"] if ENV["MRBC"]
+
+  mrbc = File.join(ROOT, "mruby", "build", "host", "bin", "mrbc")
+  if Gem.win_platform? && !File.exist?(mrbc) && File.exist?("#{mrbc}.exe")
+    mrbc = "#{mrbc}.exe"
   end
+  mrbc
 end
 
-# Mock command class
-class MockCommand
-  attr_accessor :build
+def run_mrbc(mrbc, args, label)
+  stdout, stderr, status = Open3.capture3(mrbc, *args)
+  return if status.success?
 
-  def initialize(build)
-    @build = build
-  end
+  warn stdout unless stdout.empty?
+  warn stderr unless stderr.empty?
+  abort "mrbc failed for #{label}"
 end
 
-class MockMrbc < MockCommand
-  attr_accessor :compile_options
-
-  def initialize(build)
-    super
-    @command = nil
-    @compile_options = '-B%<funcname>s -o-'
-  end
-
-  def run(_out, infiles, funcname, cdump = true)
-    @command ||= 'mrbc'
-    infiles = [infiles].flatten
-
-    puts "MRBC PATCHED: Processing #{infiles.size} files"
-    puts "MRBC: First file: #{build.filename(infiles.first)}" if infiles.size > 0
-    response_file = nil
-    if infiles.size > 100
-      puts "MRBC: Creating response file for #{infiles.size} files (Windows command line limit workaround)"
-      response_file = Tempfile.new(['mrbc', '.rsp'])
-      infiles.each { |path| response_file.puts build.filename(path) }
-      response_file.close
-      puts "MRBC: Response file created at #{response_file.path}"
-      infiles = ["@#{response_file.path}"]
-      puts "MRBC: New infiles = #{infiles.inspect}"
-    else
-      puts "MRBC: Not using response file (file count = #{infiles.size})"
-    end
-
-    begin
-      infiles.each_with_index do |f, i|
-        puts "MRBC: #{f}" if i == 0
-      end
-      cmd = %("#{build.filename @command}" #{'-S' if cdump} #{format(@compile_options,
-                                                                     funcname: funcname)} #{build.filename(infiles).map do |f|
-                                                                                            %("#{f}")
-                                                                                          end.join(' ')})
-      puts "MRBC: Command length: #{cmd.length}"
-      puts "MRBC: Command: #{cmd}"
-      # simulate IO.popen
-      puts 'MRBC: Would execute command'
-      # if success
-    ensure
-      response_file&.close!
-    end
-  end
+mrbc = resolve_mrbc
+unless File.exist?(mrbc)
+  warn "mrbc not found at #{mrbc}"
+  warn "Build it with: cd mruby && rake"
+  warn "Or set MRBC to the mrbc path."
+  exit 1
 end
 
-build = MockBuild.new
-mrbc = MockMrbc.new(build)
+Dir.mktmpdir("mrbc-response") do |dir|
+  files = []
+  200.times do |i|
+    name = (i == 149) ? "file with spaces #{i}.rb" : "file#{i}.rb"
+    path = File.join(dir, name)
+    File.write(path, "VALUE_#{i} = #{i}\n")
+    files << path
+  end
 
-# Test with 200 dummy files
-infiles = (1..200).map { |i| "path/to/file#{i}.rb" }
-puts 'Testing with 200 files...'
-mrbc.run($stdout, infiles, 'test_func', true)
+  rsp = File.join(dir, "files.rsp")
+  File.open(rsp, "w") { |f| files.each { |path| f.puts path } }
 
-# Test with 50 files
-infiles2 = (1..50).map { |i| "path/to/file#{i}.rb" }
-puts "\nTesting with 50 files..."
-mrbc.run($stdout, infiles2, 'test_func', true)
+  puts "Testing response file with #{files.size} inputs..."
+  response_out = File.join(dir, "response_out.c")
+  run_mrbc(mrbc, ["-Btest_func", "-o", response_out, "@#{rsp}"], "response file")
+  abort "response output not created" unless File.exist?(response_out)
+
+  puts "Testing direct args with 50 inputs..."
+  direct_out = File.join(dir, "direct_out.c")
+  run_mrbc(mrbc, ["-Btest_func", "-o", direct_out] + files.take(50), "direct args")
+  abort "direct output not created" unless File.exist?(direct_out)
+end
+
+puts "OK: response file and direct args succeeded."
