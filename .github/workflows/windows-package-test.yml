@@ -176,7 +176,7 @@ jobs:
         $currentDir = (Get-Location).Path
         $drive = $currentDir.Substring(0, 1)
         $shortPath = "$drive`:\m"
-        if (Test-Path $shortPath) { Remove-Item $shortPath -Force -Recurse }
+        if (Test-Path $shortPath) { Remove-Item $shortPath -Force -Recurse -ErrorAction SilentlyContinue }
         New-Item -ItemType Junction -Path $shortPath -Target $currentDir
 
         try {
@@ -185,7 +185,8 @@ jobs:
           rake "release:build:windows-x86_64"
         } finally {
           # Clean up junction
-          Remove-Item $shortPath -Force -Recurse
+          Set-Location $currentDir
+          if (Test-Path $shortPath) { Remove-Item $shortPath -Force -Recurse -ErrorAction SilentlyContinue }
         }
 
     - name: Remove Chocolatey to test winget fallback
@@ -285,7 +286,7 @@ jobs:
         $currentDir = (Get-Location).Path
         $drive = $currentDir.Substring(0, 1)
         $shortPath = "$drive`:\m"
-        if (Test-Path $shortPath) { Remove-Item $shortPath -Force -Recurse }
+        if (Test-Path $shortPath) { Remove-Item $shortPath -Force -Recurse -ErrorAction SilentlyContinue }
         New-Item -ItemType Junction -Path $shortPath -Target $currentDir
 
         try {
@@ -294,7 +295,8 @@ jobs:
           rake "release:build:windows-x86_64"
         } finally {
           # Clean up junction
-          Remove-Item $shortPath -Force -Recurse
+          Set-Location $currentDir
+          if (Test-Path $shortPath) { Remove-Item $shortPath -Force -Recurse -ErrorAction SilentlyContinue }
         }
 
 
