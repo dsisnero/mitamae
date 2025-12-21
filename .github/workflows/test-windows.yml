@@ -19,6 +19,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Cache Zig
+      uses: actions/cache@v4
+      with:
+        path: C:\zig
+        key: windows-zig-0.10.1
+
+    - name: Cache vcpkg
+      uses: actions/cache@v4
+      with:
+        path: |
+          C:\vcpkg\installed
+          C:\vcpkg\packages
+          C:\vcpkg\downloads
+        key: windows-vcpkg-x86_64-${{ hashFiles('build_config.rb', 'mrbgem.rake') }}
+
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
       with:
@@ -28,8 +43,11 @@ jobs:
     - name: Setup Zig
       run: |
         $ZigVersion = "0.10.1"
-        Invoke-WebRequest -Uri "https://ziglang.org/download/$ZigVersion/zig-windows-x86_64-$ZigVersion.zip" -OutFile zig.zip
-        Expand-Archive -Path zig.zip -DestinationPath C:\zig
+        $ZigPath = "C:\zig\zig-windows-x86_64-$ZigVersion"
+        if (-Not (Test-Path "$ZigPath\zig.exe")) {
+          Invoke-WebRequest -Uri "https://ziglang.org/download/$ZigVersion/zig-windows-x86_64-$ZigVersion.zip" -OutFile zig.zip
+          Expand-Archive -Path zig.zip -DestinationPath C:\zig
+        }
         echo "C:\zig\zig-windows-x86_64-$ZigVersion" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Install dependencies
