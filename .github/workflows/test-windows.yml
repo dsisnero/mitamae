@@ -41,6 +41,11 @@ jobs:
           C:\hostedtoolcache\windows\Ruby\3.1.*\x64
           C:\hostedtoolcache\windows\Ruby\3.1.*\x86
         key: windows-ruby-3.1
+    - name: Cache Oniguruma
+      uses: actions/cache@v4
+      with:
+        path: C:\oniguruma\windows-x86_64
+        key: windows-oniguruma-6.9.9-windows-x86_64
 
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
@@ -61,15 +66,15 @@ jobs:
     - name: Install dependencies
       run: |
         gem install rake
-        choco install mingw -y --force
+        if (-not (Get-Command ninja -ErrorAction SilentlyContinue)) {
+          choco install ninja -y --force
+        }
 
         # Install pkg-config for library detection
         # Use vcpkg to install pkgconf (provides pkg-config.exe)
         if (Test-Path "C:\vcpkg\vcpkg.exe") {
           C:\vcpkg\vcpkg.exe install pkgconf:x64-windows
-          # Add vcpkg tools to PATH (contains pkgconf's pkg-config.exe)
-          $vcpkgRoot = "C:\vcpkg"
-          $toolsPath = Join-Path $vcpkgRoot "installed\x64-windows\tools\pkgconf"
+          $toolsPath = "C:\vcpkg\installed\x64-windows\tools\pkgconf"
           if (Test-Path $toolsPath) {
             echo "$toolsPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           }
@@ -77,22 +82,61 @@ jobs:
           Write-Host "vcpkg not found, pkg-config may not be available"
         }
 
-        # Install oniguruma for mruby-onig-regexp
-        # Try vcpkg first, fall back to building from source if needed
-        if (Test-Path "C:\vcpkg\vcpkg.exe") {
-          C:\vcpkg\vcpkg.exe install oniguruma:x64-windows
-        } else {
-          Write-Host "vcpkg not found, trying Chocolatey..."
-          choco install oniguruma -y --force 2>&1 | Out-Null
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "Oniguruma not available via package manager, mruby will bundle it"
-          }
+    - name: Build Oniguruma (Zig)
+      run: |
+        $version = "6.9.9"
+        $target = "x86_64-windows-gnu"
+        $prefix = "C:\oniguruma\windows-x86_64"
+        $libPath = Join-Path $prefix "lib\libonig.a"
+
+        if (Test-Path $libPath) {
+          Write-Host "Oniguruma already cached at $libPath"
+          exit 0
         }
+
+        $srcRoot = Join-Path $env:RUNNER_TEMP "oniguruma-src"
+        $archive = Join-Path $env:RUNNER_TEMP "oniguruma-$version.tar.gz"
+        $url = "https://github.com/kkos/oniguruma/archive/refs/tags/v$version.tar.gz"
+
+        if (Test-Path $srcRoot) { Remove-Item -Recurse -Force $srcRoot }
+        New-Item -ItemType Directory -Path $srcRoot | Out-Null
+
+        Invoke-WebRequest -Uri $url -OutFile $archive
+        tar -xzf $archive -C $srcRoot
+
+        $srcDir = Join-Path $srcRoot "oniguruma-$version"
+        $buildDir = Join-Path $srcRoot "build"
+        New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
+
+        cmake -S $srcDir -B $buildDir -G "Ninja" `
+          -DCMAKE_BUILD_TYPE=Release `
+          -DBUILD_SHARED_LIBS=OFF `
+          -DCMAKE_INSTALL_PREFIX=$prefix `
+          -DCMAKE_C_COMPILER=zig `
+          -DCMAKE_C_COMPILER_TARGET=$target
+
+        cmake --build $buildDir --target install --config Release
+
+        $pkgDir = Join-Path $prefix "lib\pkgconfig"
+        New-Item -ItemType Directory -Force -Path $pkgDir | Out-Null
+        $prefixPc = $prefix -replace '\\','/'
+        @"
+prefix=$prefixPc
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: oniguruma
+Description: Oniguruma Regular Expressions
+Version: $version
+Libs: -L${libdir} -lonig
+Cflags: -I${includedir}
+"@ | Out-File -FilePath (Join-Path $pkgDir "oniguruma.pc") -Encoding ascii
 
     - name: Build mitamae
       env:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
-        PKG_CONFIG_PATH: "C:/vcpkg/packages/oniguruma_x64-windows/lib/pkgconfig;C:/vcpkg/installed/x64-windows/lib/pkgconfig"
+        PKG_CONFIG_PATH: "C:/oniguruma/windows-x86_64/lib/pkgconfig"
       run: |
         # Create junction on same drive to shorten paths for Windows command line limits
         $currentDir = (Get-Location).Path
