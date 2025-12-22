@@ -125,17 +125,17 @@ jobs:
         New-Item -ItemType Directory -Force -Path $pkgDir | Out-Null
         $prefixPc = $prefix -replace '\\','/'
         @"
-prefix=$prefixPc
-exec_prefix=${prefix}
-libdir=${prefix}/lib
-includedir=${prefix}/include
+        prefix=$prefixPc
+        exec_prefix=${prefix}
+        libdir=${prefix}/lib
+        includedir=${prefix}/include
 
-Name: oniguruma
-Description: Oniguruma Regular Expressions
-Version: $version
-Libs: -L${libdir} -lonig
-Cflags: -I${includedir}
-"@ | Out-File -FilePath (Join-Path $pkgDir "oniguruma.pc") -Encoding ascii
+        Name: oniguruma
+        Description: Oniguruma Regular Expressions
+        Version: $version
+        Libs: -L${libdir} -lonig
+        Cflags: -I${includedir}
+        "@ | Out-File -FilePath (Join-Path $pkgDir "oniguruma.pc") -Encoding ascii
 
     - name: Build mitamae
       env:
@@ -295,17 +295,17 @@ Cflags: -I${includedir}
         New-Item -ItemType Directory -Force -Path $pkgDir | Out-Null
         $prefixPc = $prefix -replace '\\','/'
         @"
-prefix=$prefixPc
-exec_prefix=${prefix}
-libdir=${prefix}/lib
-includedir=${prefix}/include
+        prefix=$prefixPc
+        exec_prefix=${prefix}
+        libdir=${prefix}/lib
+        includedir=${prefix}/include
 
-Name: oniguruma
-Description: Oniguruma Regular Expressions
-Version: $version
-Libs: -L${libdir} -lonig
-Cflags: -I${includedir}
-"@ | Out-File -FilePath (Join-Path $pkgDir "oniguruma.pc") -Encoding ascii
+        Name: oniguruma
+        Description: Oniguruma Regular Expressions
+        Version: $version
+        Libs: -L${libdir} -lonig
+        Cflags: -I${includedir}
+        "@ | Out-File -FilePath (Join-Path $pkgDir "oniguruma.pc") -Encoding ascii
 
     - name: Build mitamae
       env:
@@ -457,17 +457,17 @@ Cflags: -I${includedir}
         New-Item -ItemType Directory -Force -Path $pkgDir | Out-Null
         $prefixPc = $prefix -replace '\\','/'
         @"
-prefix=$prefixPc
-exec_prefix=${prefix}
-libdir=${prefix}/lib
-includedir=${prefix}/include
+        prefix=$prefixPc
+        exec_prefix=${prefix}
+        libdir=${prefix}/lib
+        includedir=${prefix}/include
 
-Name: oniguruma
-Description: Oniguruma Regular Expressions
-Version: $version
-Libs: -L${libdir} -lonig
-Cflags: -I${includedir}
-"@ | Out-File -FilePath (Join-Path $pkgDir "oniguruma.pc") -Encoding ascii
+        Name: oniguruma
+        Description: Oniguruma Regular Expressions
+        Version: $version
+        Libs: -L${libdir} -lonig
+        Cflags: -I${includedir}
+        "@ | Out-File -FilePath (Join-Path $pkgDir "oniguruma.pc") -Encoding ascii
 
     - name: Build mitamae
       env:
