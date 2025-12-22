@@ -39,45 +39,45 @@ builds:
       branch: HEAD
       commit: f99d9428025469f2400f93c53b185f65f963e507
       version: 0.0.0
-    https://github.com/k0kubun/mruby-open3.git:
-      url: https://github.com/k0kubun/mruby-open3.git
+    https://github.com/dsisnero/mruby-open3.git:
+      url: https://github.com/dsisnero/mruby-open3.git
       branch: HEAD
-      commit: c2c269b07d0bc819be3e8bddd621429e59134de0
+      commit: 7582582749464da1820153d66b5bfcf56051eab5
       version: 0.0.0
     https://github.com/fastly/mruby-optparse.git:
       url: https://github.com/fastly/mruby-optparse.git
       branch: HEAD
       commit: e6397a090d1efe04d5dab57c63897f0d79bbad89
       version: 0.0.0
-    https://github.com/k0kubun/mruby-shellwords.git:
-      url: https://github.com/k0kubun/mruby-shellwords.git
+    https://github.com/dsisnero/mruby-shellwords.git:
+      url: https://github.com/dsisnero/mruby-shellwords.git
       branch: HEAD
-      commit: 2a284d99b2121615e43d6accdb0e4cde1868a0d8
+      commit: 6ec80b6565ffea2457ed6570af0d1e9411f61bca
       version: 0.0.0
-    https://github.com/k0kubun/mruby-specinfra.git:
-      url: https://github.com/k0kubun/mruby-specinfra.git
+    https://github.com/dsisnero/mruby-specinfra.git:
+      url: https://github.com/dsisnero/mruby-specinfra.git
       branch: HEAD
-      commit: d6d0fda00c3f099b346a73a43cda53f03ed32a2e
+      commit: b48435719a8a3dd4aca1a2370d4b0d89d65c5096
       version: 0.0.0
-    https://github.com/k0kubun/mruby-tempfile.git:
-      url: https://github.com/k0kubun/mruby-tempfile.git
+    https://github.com/dsisnero/mruby-tempfile.git:
+      url: https://github.com/dsisnero/mruby-tempfile.git
       branch: HEAD
-      commit: 77736581bf971717aa2259144cf17bbb88b8d6b6
+      commit: 490f5a775f6405d706789c14e7029442ff08ebc7
       version: 0.0.0
     https://github.com/mrbgems/mruby-yaml.git:
       url: https://github.com/mrbgems/mruby-yaml.git
       branch: HEAD
       commit: 123010195bf621e784ee9d4ff9144a4b8e9cbb6a
       version: 0.1.0
-    https://github.com/k0kubun/mruby-erb.git:
-      url: https://github.com/k0kubun/mruby-erb.git
+    https://github.com/dsisnero/mruby-erb.git:
+      url: https://github.com/dsisnero/mruby-erb.git
       branch: HEAD
-      commit: 978257e478633542c440c9248e8cdf33c5ad2074
+      commit: 011d4d40b7ae7db0a95f7aa1258fadcda4d8d703
       version: 0.0.0
-    https://github.com/eagletmt/mruby-etc.git:
-      url: https://github.com/eagletmt/mruby-etc.git
+    https://github.com/dsisnero/mruby-etc.git:
+      url: https://github.com/dsisnero/mruby-etc.git
       branch: HEAD
-      commit: 38eb1f9f12149d5919cf73bdced53fd9a2d9d254
+      commit: 7614fcad248006e34b964c5be87fdee76f7d3ed7
       version: 0.0.0
     https://github.com/zzak/mruby-uri.git:
       url: https://github.com/zzak/mruby-uri.git
@@ -94,21 +94,16 @@ builds:
       branch: HEAD
       commit: b4415207ff6ea62360619c89a1cff83259dc4db0
       version: 0.0.0
-    https://github.com/iij/mruby-process.git:
-      url: https://github.com/iij/mruby-process.git
+    https://github.com/dsisnero/mruby-process.git:
+      url: https://github.com/dsisnero/mruby-process.git
       branch: HEAD
-      commit: 95da206a5764f4e80146979b8e35bd7a9afd6850
+      commit: 4cce4684a2e32e2c66dd31d2534b817407392701
       version: 0.0.0
     https://github.com/IceDragon200/mruby-catch-throw:
       url: https://github.com/IceDragon200/mruby-catch-throw
       branch: HEAD
       commit: 2b6eaff4232b4a9473b864df53c2917080af5dcf
       version: 1.1.0
-    https://github.com/mattn/mruby-onig-regexp.git:
-      url: https://github.com/mattn/mruby-onig-regexp.git
-      branch: HEAD
-      commit: 20ba3325d6fa504cbbf193e1b2a90e20fdab544f
-      version: 0.0.0
     https://github.com/ksss/mruby-singleton.git:
       url: https://github.com/ksss/mruby-singleton.git
       branch: HEAD
