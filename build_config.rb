@@ -2,6 +2,9 @@
 
 def gem_config(conf)
   conf.gem __dir__
+  if conf.respond_to?(:gems) && conf.gems.respond_to?(:delete_if)
+    conf.gems.delete_if { |g| g.name == 'mruby-onig-regexp' }
+  end
 end
 
 def debug_config(conf)
