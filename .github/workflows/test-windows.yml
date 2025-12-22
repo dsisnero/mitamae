@@ -97,12 +97,13 @@ jobs:
         $srcRoot = Join-Path $env:RUNNER_TEMP "oniguruma-src"
         $archive = Join-Path $env:RUNNER_TEMP "oniguruma-$version.tar.gz"
         $url = "https://github.com/kkos/oniguruma/archive/refs/tags/v$version.tar.gz"
+        $tar = Join-Path $env:WINDIR "System32\\tar.exe"
 
         if (Test-Path $srcRoot) { Remove-Item -Recurse -Force $srcRoot }
         New-Item -ItemType Directory -Path $srcRoot | Out-Null
 
         Invoke-WebRequest -Uri $url -OutFile $archive
-        tar -xzf $archive -C $srcRoot
+        & $tar -xzf $archive -C $srcRoot
 
         $srcDir = Join-Path $srcRoot "oniguruma-$version"
         $buildDir = Join-Path $srcRoot "build"
