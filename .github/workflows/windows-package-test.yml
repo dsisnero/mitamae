@@ -33,6 +33,14 @@ jobs:
           C:\vcpkg\downloads
         key: windows-vcpkg-x86_64-${{ hashFiles('build_config.rb', 'mrbgem.rake') }}
 
+    - name: Cache Ruby
+      uses: actions/cache@v4
+      with:
+        path: |
+          C:\hostedtoolcache\windows\Ruby\3.1.*\x64
+          C:\hostedtoolcache\windows\Ruby\3.1.*\x86
+        key: windows-ruby-3.1
+
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
       with:
@@ -156,6 +164,14 @@ jobs:
           C:\vcpkg\downloads
         key: windows-vcpkg-x86_64-${{ hashFiles('build_config.rb', 'mrbgem.rake') }}
 
+    - name: Cache Ruby
+      uses: actions/cache@v4
+      with:
+        path: |
+          C:\hostedtoolcache\windows\Ruby\3.1.*\x64
+          C:\hostedtoolcache\windows\Ruby\3.1.*\x86
+        key: windows-ruby-3.1
+
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
       with:
@@ -269,6 +285,14 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+
+    - name: Cache Ruby
+      uses: actions/cache@v4
+      with:
+        path: |
+          C:\hostedtoolcache\windows\Ruby\3.1.*\x64
+          C:\hostedtoolcache\windows\Ruby\3.1.*\x86
+        key: windows-ruby-3.1
 
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
