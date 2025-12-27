@@ -116,7 +116,7 @@ jobs:
         cmake -S $srcDir -B $buildDir -G "Ninja" `
           -DCMAKE_BUILD_TYPE=Release `
           -DBUILD_SHARED_LIBS=OFF `
-          -DCMAKE_INSTALL_PREFIX=$prefix `
+          -DCMAKE_INSTALL_PREFIX="C:/oniguruma/${{ matrix.target }}" `
           -DCMAKE_C_COMPILER=zig `
           -DCMAKE_C_COMPILER_ARG1="cc --target=$target"
 
