@@ -23,6 +23,7 @@ jobs:
       with:
         path: C:\zig
         key: windows-zig-0.10.1
+        save-always: true
 
     - name: Cache vcpkg
       uses: actions/cache@v4
@@ -32,6 +33,9 @@ jobs:
           C:\vcpkg\packages
           C:\vcpkg\downloads
         key: windows-vcpkg-x86_64-${{ hashFiles('build_config.rb', 'mrbgem.rake') }}
+        restore-keys: |
+          windows-vcpkg-x86_64-
+        save-always: true
 
     - name: Cache Ruby
       uses: actions/cache@v4
@@ -40,16 +44,13 @@ jobs:
           C:\hostedtoolcache\windows\Ruby\3.1.*\x64
           C:\hostedtoolcache\windows\Ruby\3.1.*\x86
         key: windows-ruby-3.1
+        save-always: true
     - name: Cache Oniguruma
       uses: actions/cache@v4
       with:
         path: C:\oniguruma\windows-x86_64
         key: windows-oniguruma-6.9.9-windows-x86_64
-    - name: Cache Oniguruma
-      uses: actions/cache@v4
-      with:
-        path: C:\oniguruma\windows-x86_64
-        key: windows-oniguruma-6.9.9-windows-x86_64
+        save-always: true
 
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
@@ -192,7 +193,14 @@ jobs:
         }
 
         # Clean up
-        choco uninstall notepad++ curl -y
+        $packages = @('notepad++', 'curl')
+        foreach ($pkg in $packages) {
+          if (choco list --local-only --exact $pkg | Select-String -Pattern ("^" + [regex]::Escape($pkg) + "(\\s|\\|)")) {
+            choco uninstall $pkg -y
+          } else {
+            Write-Host "Skipping uninstall for $pkg (not installed)"
+          }
+        }
 
   test-winget:
     runs-on: windows-latest
@@ -207,6 +215,7 @@ jobs:
       with:
         path: C:\zig
         key: windows-zig-0.10.1
+        save-always: true
 
     - name: Cache vcpkg
       uses: actions/cache@v4
@@ -216,6 +225,9 @@ jobs:
           C:\vcpkg\packages
           C:\vcpkg\downloads
         key: windows-vcpkg-x86_64-${{ hashFiles('build_config.rb', 'mrbgem.rake') }}
+        restore-keys: |
+          windows-vcpkg-x86_64-
+        save-always: true
 
     - name: Cache Ruby
       uses: actions/cache@v4
@@ -224,6 +236,7 @@ jobs:
           C:\hostedtoolcache\windows\Ruby\3.1.*\x64
           C:\hostedtoolcache\windows\Ruby\3.1.*\x86
         key: windows-ruby-3.1
+        save-always: true
 
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
@@ -349,12 +362,12 @@ jobs:
           Write-Host "✓ winget is available"
 
           # Create test recipe for winget
-          @"
-          # Test winget package installation (when Chocolatey not available)
-          package 'Microsoft.PowerShell' do
-            action :install
-          end
-          "@ | Out-File -FilePath winget_test.rb -Encoding utf8
+          @(
+            "# Test winget package installation (when Chocolatey not available)",
+            "package 'Microsoft.PowerShell' do",
+            "  action :install",
+            "end"
+          ) -join "`n" | Out-File -FilePath winget_test.rb -Encoding utf8
 
           # Run test
           .\mitamae-build\mitamae-x86_64-windows.exe local -l debug winget_test.rb
@@ -389,11 +402,13 @@ jobs:
           C:\hostedtoolcache\windows\Ruby\3.1.*\x64
           C:\hostedtoolcache\windows\Ruby\3.1.*\x86
         key: windows-ruby-3.1
+        save-always: true
     - name: Cache Oniguruma
       uses: actions/cache@v4
       with:
         path: C:\oniguruma\windows-x86_64
         key: windows-oniguruma-6.9.9-windows-x86_64
+        save-always: true
 
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
@@ -516,12 +531,12 @@ jobs:
     - name: Test package manager fallback
       run: |
         # Create test recipe that should fall back to specinfra
-        @"
-        # This should fall back to specinfra when no package manager is available
-        package 'nonexistentpackage' do
-          action :install
-        end
-        "@ | Out-File -FilePath fallback_test.rb -Encoding utf8
+        @(
+          "# This should fall back to specinfra when no package manager is available",
+          "package 'nonexistentpackage' do",
+          "  action :install",
+          "end"
+        ) -join "`n" | Out-File -FilePath fallback_test.rb -Encoding utf8
 
         # Run test - should fail gracefully
         .\mitamae-build\mitamae-x86_64-windows.exe local -l error fallback_test.rb
@@ -530,6 +545,7 @@ jobs:
         } else {
           Write-Host "⚠ Package resource failed (expected when no package manager available)"
         }
+        exit 0
 
     - name: Restore package managers
       run: |

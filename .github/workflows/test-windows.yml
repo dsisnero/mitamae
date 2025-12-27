@@ -24,6 +24,7 @@ jobs:
       with:
         path: C:\zig
         key: windows-zig-0.10.1
+        save-always: true
 
     - name: Cache vcpkg
       uses: actions/cache@v4
@@ -33,6 +34,9 @@ jobs:
           C:\vcpkg\packages
           C:\vcpkg\downloads
         key: windows-vcpkg-x86_64-${{ hashFiles('build_config.rb', 'mrbgem.rake') }}
+        restore-keys: |
+          windows-vcpkg-x86_64-
+        save-always: true
 
     - name: Cache Ruby
       uses: actions/cache@v4
@@ -41,11 +45,13 @@ jobs:
           C:\hostedtoolcache\windows\Ruby\3.1.*\x64
           C:\hostedtoolcache\windows\Ruby\3.1.*\x86
         key: windows-ruby-3.1
+        save-always: true
     - name: Cache Oniguruma
       uses: actions/cache@v4
       with:
         path: C:\oniguruma\windows-x86_64
         key: windows-oniguruma-6.9.9-windows-x86_64
+        save-always: true
 
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
@@ -215,6 +221,7 @@ jobs:
 
     - name: Create template file
       run: |
+        New-Item -ItemType Directory -Force -Path templates | Out-Null
         @"
         <%= @message %>
         Generated at: <%= Time.now %>

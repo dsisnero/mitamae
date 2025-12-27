@@ -22,6 +22,7 @@ jobs:
       with:
         path: C:\zig
         key: windows-zig-0.10.1
+        save-always: true
 
     - name: Cache vcpkg
       uses: actions/cache@v4
@@ -31,6 +32,9 @@ jobs:
           C:\vcpkg\packages
           C:\vcpkg\downloads
         key: windows-vcpkg-${{ matrix.target }}-${{ hashFiles('build_config.rb', 'mrbgem.rake') }}
+        restore-keys: |
+          windows-vcpkg-${{ matrix.target }}-
+        save-always: true
 
     - name: Cache Ruby
       uses: actions/cache@v4
@@ -39,11 +43,13 @@ jobs:
           C:\hostedtoolcache\windows\Ruby\3.1.*\x64
           C:\hostedtoolcache\windows\Ruby\3.1.*\x86
         key: windows-ruby-3.1
+        save-always: true
     - name: Cache Oniguruma
       uses: actions/cache@v4
       with:
         path: C:\oniguruma\${{ matrix.target }}
         key: windows-oniguruma-6.9.9-${{ matrix.target }}
+        save-always: true
 
     - name: Setup Zig
       run: |

@@ -34,6 +34,13 @@ MRuby::Build.new do |conf|
   # conf.enable_bintest
   # conf.enable_debug
   # conf.enable_test
+  if build_targets.include?('windows-i386') && !build_targets.include?('windows-x86_64')
+    [conf.cc, conf.linker].each do |cc|
+      cc.command = 'zig cc -target i386-windows-gnu -static'
+      cc.flags << '-DMRB_ARY_LENGTH_MAX=65536'
+    end
+    conf.archiver.command = 'zig ar'
+  end
 
   debug_config(conf)
   gem_config(conf)
