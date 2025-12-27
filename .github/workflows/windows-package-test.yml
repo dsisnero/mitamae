@@ -118,8 +118,7 @@ jobs:
           -DBUILD_SHARED_LIBS=OFF `
           -DCMAKE_INSTALL_PREFIX=$prefix `
           -DCMAKE_C_COMPILER=zig `
-          -DCMAKE_C_COMPILER_ARG1=cc `
-          -DCMAKE_C_COMPILER_TARGET=$target
+          -DCMAKE_C_COMPILER_ARG1="cc --target=$target"
 
         cmake --build $buildDir --target install --config Release
 
@@ -290,8 +289,7 @@ jobs:
           -DBUILD_SHARED_LIBS=OFF `
           -DCMAKE_INSTALL_PREFIX=$prefix `
           -DCMAKE_C_COMPILER=zig `
-          -DCMAKE_C_COMPILER_ARG1=cc `
-          -DCMAKE_C_COMPILER_TARGET=$target
+          -DCMAKE_C_COMPILER_ARG1="cc --target=$target"
 
         cmake --build $buildDir --target install --config Release
 
@@ -454,8 +452,7 @@ jobs:
           -DBUILD_SHARED_LIBS=OFF `
           -DCMAKE_INSTALL_PREFIX=$prefix `
           -DCMAKE_C_COMPILER=zig `
-          -DCMAKE_C_COMPILER_ARG1=cc `
-          -DCMAKE_C_COMPILER_TARGET=$target
+          -DCMAKE_C_COMPILER_ARG1="cc --target=$target"
 
         cmake --build $buildDir --target install --config Release
 
