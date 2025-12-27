@@ -123,15 +123,15 @@ jobs:
         $prefixPc = $prefix -replace '\\','/'
         @"
         prefix=$prefixPc
-        exec_prefix=${prefix}
-        libdir=${prefix}/lib
-        includedir=${prefix}/include
+        exec_prefix=$prefixPc
+        libdir=$prefixPc/lib
+        includedir=$prefixPc/include
 
         Name: oniguruma
         Description: Oniguruma Regular Expressions
         Version: $version
-        Libs: -L${libdir} -lonig
-        Cflags: -I${includedir}
+        Libs: -L$prefixPc/lib -lonig
+        Cflags: -I$prefixPc/include
         "@ | Out-File -FilePath (Join-Path $pkgDir "oniguruma.pc") -Encoding ascii
 
     - name: Build mitamae
