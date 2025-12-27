@@ -78,6 +78,7 @@ jobs:
         # Use vcpkg to install pkgconf (provides pkg-config.exe)
         if (Test-Path "C:\vcpkg\vcpkg.exe") {
           C:\vcpkg\vcpkg.exe install pkgconf:x64-windows
+          C:\vcpkg\vcpkg.exe install libyaml:x64-windows
           $toolsPath = "C:\vcpkg\installed\x64-windows\tools\pkgconf"
           if (Test-Path $toolsPath) {
             echo "$toolsPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
@@ -141,7 +142,7 @@ jobs:
     - name: Build mitamae
       env:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
-        PKG_CONFIG_PATH: "C:/oniguruma/windows-x86_64/lib/pkgconfig"
+        PKG_CONFIG_PATH: "C:/oniguruma/windows-x86_64/lib/pkgconfig;C:/vcpkg/installed/x64-windows/lib/pkgconfig"
       run: |
         rake "release:build:windows-x86_64"
 
@@ -249,6 +250,7 @@ jobs:
         # Use vcpkg to install pkgconf (provides pkg-config.exe)
         if (Test-Path "C:\vcpkg\vcpkg.exe") {
           C:\vcpkg\vcpkg.exe install pkgconf:x64-windows
+          C:\vcpkg\vcpkg.exe install libyaml:x64-windows
           $toolsPath = "C:\vcpkg\installed\x64-windows\tools\pkgconf"
           if (Test-Path $toolsPath) {
             echo "$toolsPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
@@ -312,7 +314,7 @@ jobs:
     - name: Build mitamae
       env:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
-        PKG_CONFIG_PATH: "C:/oniguruma/windows-x86_64/lib/pkgconfig"
+        PKG_CONFIG_PATH: "C:/oniguruma/windows-x86_64/lib/pkgconfig;C:/vcpkg/installed/x64-windows/lib/pkgconfig"
       run: |
         # Create junction on same drive to shorten paths for Windows command line limits
         $currentDir = (Get-Location).Path
@@ -412,6 +414,7 @@ jobs:
         # Use vcpkg to install pkgconf (provides pkg-config.exe)
         if (Test-Path "C:\vcpkg\vcpkg.exe") {
           C:\vcpkg\vcpkg.exe install pkgconf:x64-windows
+          C:\vcpkg\vcpkg.exe install libyaml:x64-windows
           $toolsPath = "C:\vcpkg\installed\x64-windows\tools\pkgconf"
           if (Test-Path $toolsPath) {
             echo "$toolsPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
@@ -475,7 +478,7 @@ jobs:
     - name: Build mitamae
       env:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
-        PKG_CONFIG_PATH: "C:/oniguruma/windows-x86_64/lib/pkgconfig"
+        PKG_CONFIG_PATH: "C:/oniguruma/windows-x86_64/lib/pkgconfig;C:/vcpkg/installed/x64-windows/lib/pkgconfig"
       run: |
         # Create junction on same drive to shorten paths for Windows command line limits
         $currentDir = (Get-Location).Path
