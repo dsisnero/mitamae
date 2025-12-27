@@ -89,7 +89,7 @@ jobs:
     - name: Build Oniguruma (Zig)
       run: |
         $version = "6.9.9"
-        $target = if ("${{ matrix.target }}" -eq "windows-x86_64") { "x86_64-windows-gnu" } else { "i686-windows-gnu" }
+        $target = if ("${{ matrix.target }}" -eq "windows-x86_64") { "x86_64-windows-gnu" } else { "i386-windows-gnu" }
         $prefix = "C:\oniguruma\${{ matrix.target }}"
         $libPath = Join-Path $prefix "lib\libonig.a"
 
