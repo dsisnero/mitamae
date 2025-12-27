@@ -206,7 +206,7 @@ end
 # This will be applied when WindowsPath.node is set
 # Monkey patch File class for Windows compatibility
 # This will be applied when WindowsPath.node is set
-if defined?(MItamae::WindowsPath)
+if MItamae.const_defined?(:WindowsPath)
   class File
     class << self
       # Store original methods before monkey patching

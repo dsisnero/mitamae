@@ -142,6 +142,8 @@ jobs:
     - name: Build mitamae
       env:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
+        ONIGURUMA_PREFIX: "C:/oniguruma/windows-x86_64"
+        VCPKG_ROOT: "C:/vcpkg"
         PKG_CONFIG_PATH: "C:/oniguruma/windows-x86_64/lib/pkgconfig;C:/vcpkg/installed/x64-windows/lib/pkgconfig"
       run: |
         rake "release:build:windows-x86_64"
@@ -314,6 +316,8 @@ jobs:
     - name: Build mitamae
       env:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
+        ONIGURUMA_PREFIX: "C:/oniguruma/windows-x86_64"
+        VCPKG_ROOT: "C:/vcpkg"
         PKG_CONFIG_PATH: "C:/oniguruma/windows-x86_64/lib/pkgconfig;C:/vcpkg/installed/x64-windows/lib/pkgconfig"
       run: |
         # Create junction on same drive to shorten paths for Windows command line limits
@@ -478,6 +482,8 @@ jobs:
     - name: Build mitamae
       env:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
+        ONIGURUMA_PREFIX: "C:/oniguruma/windows-x86_64"
+        VCPKG_ROOT: "C:/vcpkg"
         PKG_CONFIG_PATH: "C:/oniguruma/windows-x86_64/lib/pkgconfig;C:/vcpkg/installed/x64-windows/lib/pkgconfig"
       run: |
         # Create junction on same drive to shorten paths for Windows command line limits

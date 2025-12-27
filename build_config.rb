@@ -165,6 +165,18 @@ if build_targets.include?('windows-x86_64')
     # To configure: mrbgems/mruby-yaml, k0kubun/mruby-onig-regexp
     conf.host_target = 'x86_64-w64-mingw32'
 
+    if ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'] && !ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'].empty?
+      vcpkg_root = ENV.fetch('VCPKG_ROOT', 'C:/vcpkg')
+      triplet = 'x64-windows'
+      conf.cc.include_paths << "#{vcpkg_root}/installed/#{triplet}/include"
+      conf.linker.library_paths << "#{vcpkg_root}/installed/#{triplet}/lib"
+      conf.linker.libraries << 'yaml'
+    end
+    if ENV['ONIGURUMA_PREFIX'] && !ENV['ONIGURUMA_PREFIX'].empty?
+      conf.cc.include_paths << "#{ENV['ONIGURUMA_PREFIX']}/include"
+      conf.linker.library_paths << "#{ENV['ONIGURUMA_PREFIX']}/lib"
+    end
+
     debug_config(conf)
     gem_config(conf)
   end
@@ -187,6 +199,18 @@ if build_targets.include?('windows-i386')
 
     # To configure: mrbgems/mruby-yaml, k0kubun/mruby-onig-regexp
     conf.host_target = 'i686-w64-mingw32'
+
+    if ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'] && !ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'].empty?
+      vcpkg_root = ENV.fetch('VCPKG_ROOT', 'C:/vcpkg')
+      triplet = 'x86-windows'
+      conf.cc.include_paths << "#{vcpkg_root}/installed/#{triplet}/include"
+      conf.linker.library_paths << "#{vcpkg_root}/installed/#{triplet}/lib"
+      conf.linker.libraries << 'yaml'
+    end
+    if ENV['ONIGURUMA_PREFIX'] && !ENV['ONIGURUMA_PREFIX'].empty?
+      conf.cc.include_paths << "#{ENV['ONIGURUMA_PREFIX']}/include"
+      conf.linker.library_paths << "#{ENV['ONIGURUMA_PREFIX']}/lib"
+    end
 
     debug_config(conf)
     gem_config(conf)

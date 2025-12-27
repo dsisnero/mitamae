@@ -35,7 +35,7 @@ module MItamae
         end
 
         # Initialize WindowsPath with node for platform detection
-        if defined?(MItamae::WindowsPath)
+        if MItamae.const_defined?(:WindowsPath)
           MItamae::WindowsPath.node = node
         end
       end
