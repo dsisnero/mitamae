@@ -18,15 +18,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Cache Zig
-      uses: actions/cache@v4
+    - name: Restore Zig cache
+      id: cache-zig
+      uses: actions/cache/restore@v4
       with:
         path: C:\zig
         key: windows-zig-0.10.1
-        save-always: true
 
-    - name: Cache vcpkg
-      uses: actions/cache@v4
+    - name: Restore vcpkg cache
+      id: cache-vcpkg
+      uses: actions/cache/restore@v4
       with:
         path: |
           C:\vcpkg\installed
@@ -35,22 +36,21 @@ jobs:
         key: windows-vcpkg-x86_64-${{ hashFiles('build_config.rb', 'mrbgem.rake') }}
         restore-keys: |
           windows-vcpkg-x86_64-
-        save-always: true
 
-    - name: Cache Ruby
-      uses: actions/cache@v4
+    - name: Restore Ruby cache
+      id: cache-ruby
+      uses: actions/cache/restore@v4
       with:
         path: |
           C:\hostedtoolcache\windows\Ruby\3.1.*\x64
           C:\hostedtoolcache\windows\Ruby\3.1.*\x86
         key: windows-ruby-3.1
-        save-always: true
-    - name: Cache Oniguruma
-      uses: actions/cache@v4
+    - name: Restore Oniguruma cache
+      id: cache-oniguruma
+      uses: actions/cache/restore@v4
       with:
         path: C:\oniguruma\windows-x86_64
         key: windows-oniguruma-6.9.9-windows-x86_64
-        save-always: true
 
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
@@ -202,6 +202,39 @@ jobs:
           }
         }
 
+    - name: Save Zig cache
+      if: always() && steps.cache-zig.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: C:\zig
+        key: ${{ steps.cache-zig.outputs.cache-primary-key }}
+
+    - name: Save vcpkg cache
+      if: always() && steps.cache-vcpkg.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          C:\vcpkg\installed
+          C:\vcpkg\packages
+          C:\vcpkg\downloads
+        key: ${{ steps.cache-vcpkg.outputs.cache-primary-key }}
+
+    - name: Save Ruby cache
+      if: always() && steps.cache-ruby.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          C:\hostedtoolcache\windows\Ruby\3.1.*\x64
+          C:\hostedtoolcache\windows\Ruby\3.1.*\x86
+        key: ${{ steps.cache-ruby.outputs.cache-primary-key }}
+
+    - name: Save Oniguruma cache
+      if: always() && steps.cache-oniguruma.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: C:\oniguruma\windows-x86_64
+        key: ${{ steps.cache-oniguruma.outputs.cache-primary-key }}
+
   test-winget:
     runs-on: windows-latest
     timeout-minutes: 30
@@ -210,15 +243,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Cache Zig
-      uses: actions/cache@v4
+    - name: Restore Zig cache
+      id: cache-zig
+      uses: actions/cache/restore@v4
       with:
         path: C:\zig
         key: windows-zig-0.10.1
-        save-always: true
 
-    - name: Cache vcpkg
-      uses: actions/cache@v4
+    - name: Restore vcpkg cache
+      id: cache-vcpkg
+      uses: actions/cache/restore@v4
       with:
         path: |
           C:\vcpkg\installed
@@ -227,16 +261,15 @@ jobs:
         key: windows-vcpkg-x86_64-${{ hashFiles('build_config.rb', 'mrbgem.rake') }}
         restore-keys: |
           windows-vcpkg-x86_64-
-        save-always: true
 
-    - name: Cache Ruby
-      uses: actions/cache@v4
+    - name: Restore Ruby cache
+      id: cache-ruby
+      uses: actions/cache/restore@v4
       with:
         path: |
           C:\hostedtoolcache\windows\Ruby\3.1.*\x64
           C:\hostedtoolcache\windows\Ruby\3.1.*\x86
         key: windows-ruby-3.1
-        save-always: true
 
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
@@ -387,6 +420,32 @@ jobs:
         # Restore choco.exe
         Rename-Item "C:\ProgramData\chocolatey\bin\choco.exe.bak" "C:\ProgramData\chocolatey\bin\choco.exe" -ErrorAction SilentlyContinue
 
+    - name: Save Zig cache
+      if: always() && steps.cache-zig.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: C:\zig
+        key: ${{ steps.cache-zig.outputs.cache-primary-key }}
+
+    - name: Save vcpkg cache
+      if: always() && steps.cache-vcpkg.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          C:\vcpkg\installed
+          C:\vcpkg\packages
+          C:\vcpkg\downloads
+        key: ${{ steps.cache-vcpkg.outputs.cache-primary-key }}
+
+    - name: Save Ruby cache
+      if: always() && steps.cache-ruby.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          C:\hostedtoolcache\windows\Ruby\3.1.*\x64
+          C:\hostedtoolcache\windows\Ruby\3.1.*\x86
+        key: ${{ steps.cache-ruby.outputs.cache-primary-key }}
+
   test-no-package-manager:
     runs-on: windows-latest
     timeout-minutes: 30
@@ -395,20 +454,20 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Cache Ruby
-      uses: actions/cache@v4
+    - name: Restore Ruby cache
+      id: cache-ruby
+      uses: actions/cache/restore@v4
       with:
         path: |
           C:\hostedtoolcache\windows\Ruby\3.1.*\x64
           C:\hostedtoolcache\windows\Ruby\3.1.*\x86
         key: windows-ruby-3.1
-        save-always: true
-    - name: Cache Oniguruma
-      uses: actions/cache@v4
+    - name: Restore Oniguruma cache
+      id: cache-oniguruma
+      uses: actions/cache/restore@v4
       with:
         path: C:\oniguruma\windows-x86_64
         key: windows-oniguruma-6.9.9-windows-x86_64
-        save-always: true
 
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
@@ -551,3 +610,19 @@ jobs:
       run: |
         # Restore choco.exe
         Rename-Item "C:\ProgramData\chocolatey\bin\choco.exe.bak" "C:\ProgramData\chocolatey\bin\choco.exe" -ErrorAction SilentlyContinue
+
+    - name: Save Ruby cache
+      if: always() && steps.cache-ruby.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          C:\hostedtoolcache\windows\Ruby\3.1.*\x64
+          C:\hostedtoolcache\windows\Ruby\3.1.*\x86
+        key: ${{ steps.cache-ruby.outputs.cache-primary-key }}
+
+    - name: Save Oniguruma cache
+      if: always() && steps.cache-oniguruma.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: C:\oniguruma\windows-x86_64
+        key: ${{ steps.cache-oniguruma.outputs.cache-primary-key }}
