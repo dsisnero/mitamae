@@ -23,6 +23,18 @@ def run_mrbc(mrbc, args, label)
   abort "mrbc failed for #{label}"
 end
 
+def run_mrbc_expect_failure(mrbc, args, label, expected_stderr)
+  stdout, stderr, status = Open3.capture3(mrbc, *args)
+  if status.success?
+    abort "mrbc unexpectedly succeeded for #{label}"
+  end
+  if expected_stderr && !stderr.include?(expected_stderr)
+    warn stdout unless stdout.empty?
+    warn stderr unless stderr.empty?
+    abort "mrbc stderr did not include #{expected_stderr.inspect} for #{label}"
+  end
+end
+
 mrbc = resolve_mrbc
 unless File.exist?(mrbc)
   warn "mrbc not found at #{mrbc}"
@@ -47,6 +59,18 @@ Dir.mktmpdir("mrbc-response") do |dir|
   response_out = File.join(dir, "response_out.c")
   run_mrbc(mrbc, ["-Btest_func", "-o", response_out, "@#{rsp}"], "response file")
   abort "response output not created" unless File.exist?(response_out)
+
+  puts "Testing empty response file failure..."
+  empty_rsp = File.join(dir, "empty.rsp")
+  File.write(empty_rsp, "")
+  empty_out = File.join(dir, "empty_out.c")
+  run_mrbc_expect_failure(
+    mrbc,
+    ["-Btest_func", "-o", empty_out, "@#{empty_rsp}"],
+    "empty response file",
+    "response file is empty"
+  )
+  abort "empty response output should not be created" if File.exist?(empty_out)
 
   if Gem.win_platform?
     rsp_win = File.join(dir, "files_windows.rsp")

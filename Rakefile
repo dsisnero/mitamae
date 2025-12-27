@@ -258,6 +258,10 @@ load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path
     if (line[0] == '\0') continue;
     count++;
   }
+  if (count == 0) {
+    fclose(f);
+    return -1;
+  }
   rewind(f);
   char **lines = mrb_malloc(mrb, sizeof(char*) * count);
   int i = 0;
@@ -281,7 +285,7 @@ load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path
         content.insert(partial_hook_start, load_response_func)
       end
       # Modify load_file to detect '@'
-      content.sub!(/  char \*input = args->argv\[args->idx\];\n/, "  char *input = args->argv[args->idx];\n  if (input[0] == '@') {\n    if (!load_response_file(mrb, args, input + 1)) {\n      fprintf(stderr, \"%s: cannot open response file. (%s)\\n\", args->prog, input);\n      return mrb_nil_value();\n    }\n    input = args->argv[args->idx];\n  }\n")
+      content.sub!(/  char \*input = args->argv\[args->idx\];\n/, "  char *input = args->argv[args->idx];\n  if (input[0] == '@') {\n    int rsp_status = load_response_file(mrb, args, input + 1);\n    if (rsp_status <= 0) {\n      if (rsp_status < 0) {\n        fprintf(stderr, \"%s: response file is empty. (%s)\\n\", args->prog, input);\n      }\n      else {\n        fprintf(stderr, \"%s: cannot open response file. (%s)\\n\", args->prog, input);\n      }\n      return mrb_nil_value();\n    }\n    input = args->argv[args->idx];\n  }\n")
       modified = true
       puts "DEBUG: Patched mrbc.c with response file support"
     else
@@ -328,7 +332,7 @@ load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path
     # Ensure load_file function handles @response files (even if already patched)
     unless content.include?('if (input[0] == \'@\')')
       # Add response file detection to load_file function
-      if content.sub!(/  char \*input = args->argv\[args->idx\];\n/, "  char *input = args->argv[args->idx];\n  if (input[0] == '@') {\n    if (!load_response_file(mrb, args, input + 1)) {\n      fprintf(stderr, \"%s: cannot open response file. (%s)\\n\", args->prog, input);\n      return mrb_nil_value();\n    }\n    input = args->argv[args->idx];\n  }\n")
+      if content.sub!(/  char \*input = args->argv\[args->idx\];\n/, "  char *input = args->argv[args->idx];\n  if (input[0] == '@') {\n    int rsp_status = load_response_file(mrb, args, input + 1);\n    if (rsp_status <= 0) {\n      if (rsp_status < 0) {\n        fprintf(stderr, \"%s: response file is empty. (%s)\\n\", args->prog, input);\n      }\n      else {\n        fprintf(stderr, \"%s: cannot open response file. (%s)\\n\", args->prog, input);\n      }\n      return mrb_nil_value();\n    }\n    input = args->argv[args->idx];\n  }\n")
         modified = true
         puts "DEBUG: Patched load_file function with @response detection"
       end
@@ -355,6 +359,10 @@ load_response_file(mrb_state *mrb, struct mrbc_args *args, const char *resp_path
     if (p) *p = '\0';
     if (line[0] == '\0') continue;
     count++;
+  }
+  if (count == 0) {
+    fclose(f);
+    return -1;
   }
   rewind(f);
   char **lines = mrb_malloc(mrb, sizeof(char*) * count);
