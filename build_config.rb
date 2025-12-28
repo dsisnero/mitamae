@@ -34,6 +34,13 @@ MRuby::Build.new do |conf|
   # conf.enable_bintest
   # conf.enable_debug
   # conf.enable_test
+  if ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'] && !ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'].empty?
+    vcpkg_root = ENV.fetch('VCPKG_ROOT', 'C:/vcpkg')
+    triplet = 'x64-windows'
+    conf.cc.include_paths << "#{vcpkg_root}/installed/#{triplet}/include"
+    conf.linker.library_paths << "#{vcpkg_root}/installed/#{triplet}/lib"
+    conf.linker.libraries << 'yaml'
+  end
   if build_targets.include?('windows-i386') && !build_targets.include?('windows-x86_64')
     [conf.cc, conf.linker].each do |cc|
       cc.command = 'zig cc -target i386-windows-gnu -static'

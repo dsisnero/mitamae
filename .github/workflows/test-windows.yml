@@ -224,7 +224,12 @@ jobs:
 
     - name: Run comprehensive test recipe
       run: |
-        .\mitamae-build\mitamae-x86_64-windows.exe local -l debug windows_test.rb
+        .\mitamae-build\mitamae-x86_64-windows.exe local -l debug windows_test.rb 2>&1 | Tee-Object -FilePath windows_test.log
+        $exitCode = $LASTEXITCODE
+        if ($exitCode -ne 0) {
+          Get-Content windows_test.log
+          exit $exitCode
+        }
 
     - name: Verify test results
       run: |
