@@ -36,10 +36,12 @@ MRuby::Build.new do |conf|
   # conf.enable_test
   if ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'] && !ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'].empty?
     vcpkg_root = ENV.fetch('VCPKG_ROOT', 'C:/vcpkg')
-    triplet = build_targets.include?('windows-i386') ? 'x86-windows' : 'x64-windows'
+    default_triplet = build_targets.include?('windows-i386') ? 'x86-windows' : 'x64-windows'
+    triplet = ENV.fetch('VCPKG_TRIPLET', default_triplet)
     conf.cc.include_paths << "#{vcpkg_root}/installed/#{triplet}/include"
     conf.linker.library_paths << "#{vcpkg_root}/installed/#{triplet}/lib"
     conf.linker.libraries << 'yaml'
+    conf.cc.flags << '-DYAML_DECLARE_STATIC' if triplet.end_with?('-static')
   end
   if build_targets.include?('windows-i386') && !build_targets.include?('windows-x86_64')
     [conf.cc, conf.linker].each do |cc|
@@ -180,10 +182,11 @@ if build_targets.include?('windows-x86_64')
 
     if ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'] && !ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'].empty?
       vcpkg_root = ENV.fetch('VCPKG_ROOT', 'C:/vcpkg')
-      triplet = 'x64-windows'
+      triplet = ENV.fetch('VCPKG_TRIPLET', 'x64-windows')
       conf.cc.include_paths << "#{vcpkg_root}/installed/#{triplet}/include"
       conf.linker.library_paths << "#{vcpkg_root}/installed/#{triplet}/lib"
       conf.linker.libraries << 'yaml'
+      conf.cc.flags << '-DYAML_DECLARE_STATIC' if triplet.end_with?('-static')
     end
     if ENV['ONIGURUMA_PREFIX'] && !ENV['ONIGURUMA_PREFIX'].empty?
       conf.cc.include_paths << "#{ENV['ONIGURUMA_PREFIX']}/include"
@@ -214,10 +217,11 @@ if build_targets.include?('windows-i386')
 
     if ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'] && !ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'].empty?
       vcpkg_root = ENV.fetch('VCPKG_ROOT', 'C:/vcpkg')
-      triplet = 'x86-windows'
+      triplet = ENV.fetch('VCPKG_TRIPLET', 'x86-windows')
       conf.cc.include_paths << "#{vcpkg_root}/installed/#{triplet}/include"
       conf.linker.library_paths << "#{vcpkg_root}/installed/#{triplet}/lib"
       conf.linker.libraries << 'yaml'
+      conf.cc.flags << '-DYAML_DECLARE_STATIC' if triplet.end_with?('-static')
     end
     if ENV['ONIGURUMA_PREFIX'] && !ENV['ONIGURUMA_PREFIX'].empty?
       conf.cc.include_paths << "#{ENV['ONIGURUMA_PREFIX']}/include"
