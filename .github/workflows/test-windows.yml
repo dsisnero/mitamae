@@ -38,14 +38,6 @@ jobs:
         restore-keys: |
           windows-vcpkg-x86_64-
 
-    - name: Restore Ruby cache
-      id: cache-ruby
-      uses: actions/cache/restore@v4
-      with:
-        path: |
-          C:\hostedtoolcache\windows\Ruby\3.1.*\x64
-          C:\hostedtoolcache\windows\Ruby\3.1.*\x86
-        key: windows-ruby-3.1
     - name: Restore Oniguruma cache
       id: cache-oniguruma
       uses: actions/cache/restore@v4
@@ -60,6 +52,7 @@ jobs:
         bundler-cache: true
 
     - name: Setup Zig
+      id: setup-zig
       run: |
         $ZigVersion = "0.10.1"
         $ZigPath = "C:\zig\zig-windows-x86_64-$ZigVersion"
@@ -70,6 +63,7 @@ jobs:
         echo "C:\zig\zig-windows-x86_64-$ZigVersion" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Install dependencies
+      id: install-deps
       run: |
         gem install rake
         if (-not (Get-Command ninja -ErrorAction SilentlyContinue)) {
@@ -90,6 +84,7 @@ jobs:
         }
 
     - name: Build Oniguruma (Zig)
+      id: build-oniguruma
       run: |
         $version = "6.9.9"
         $target = "x86_64-windows-gnu"
@@ -269,14 +264,14 @@ jobs:
         .\mitamae-build\mitamae-x86_64-windows.exe local -l info spec/recipes/windows_path_test.rb
 
     - name: Save Zig cache
-      if: always() && steps.cache-zig.outputs.cache-hit != 'true'
+      if: always() && steps.cache-zig.outputs.cache-hit != 'true' && steps.setup-zig.outcome == 'success'
       uses: actions/cache/save@v4
       with:
         path: C:\zig
         key: ${{ steps.cache-zig.outputs.cache-primary-key }}
 
     - name: Save vcpkg cache
-      if: always() && steps.cache-vcpkg.outputs.cache-hit != 'true'
+      if: always() && steps.cache-vcpkg.outputs.cache-hit != 'true' && steps.install-deps.outcome == 'success'
       uses: actions/cache/save@v4
       with:
         path: |
@@ -285,17 +280,8 @@ jobs:
           C:\vcpkg\downloads
         key: ${{ steps.cache-vcpkg.outputs.cache-primary-key }}
 
-    - name: Save Ruby cache
-      if: always() && steps.cache-ruby.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v4
-      with:
-        path: |
-          C:\hostedtoolcache\windows\Ruby\3.1.*\x64
-          C:\hostedtoolcache\windows\Ruby\3.1.*\x86
-        key: ${{ steps.cache-ruby.outputs.cache-primary-key }}
-
     - name: Save Oniguruma cache
-      if: always() && steps.cache-oniguruma.outputs.cache-hit != 'true'
+      if: always() && steps.cache-oniguruma.outputs.cache-hit != 'true' && steps.build-oniguruma.outcome == 'success'
       uses: actions/cache/save@v4
       with:
         path: C:\oniguruma\windows-x86_64
