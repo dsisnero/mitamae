@@ -36,7 +36,7 @@ MRuby::Build.new do |conf|
   # conf.enable_test
   if ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'] && !ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'].empty?
     vcpkg_root = ENV.fetch('VCPKG_ROOT', 'C:/vcpkg')
-    triplet = 'x64-windows'
+    triplet = build_targets.include?('windows-i386') ? 'x86-windows' : 'x64-windows'
     conf.cc.include_paths << "#{vcpkg_root}/installed/#{triplet}/include"
     conf.linker.library_paths << "#{vcpkg_root}/installed/#{triplet}/lib"
     conf.linker.libraries << 'yaml'
