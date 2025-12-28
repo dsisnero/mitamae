@@ -5,7 +5,7 @@ module MItamae
 
     def initialize(shell: '/bin/sh')
       @shell = shell
-      @backend = Specinfra::Backend::Exec.new(shell: @shell)
+      @backend = ::Specinfra::Backend::Exec.new(shell: @shell)
     end
 
     # https://github.com/itamae-kitchen/itamae/blob/v1.9.9/lib/itamae/backend.rb#L46-L86
@@ -40,7 +40,7 @@ module MItamae
         raise CommandExecutionError
       end
 
-      Specinfra::CommandResult.new(stdout: stdout, stderr: stderr, exit_status: status.exitstatus)
+      ::Specinfra::CommandResult.new(stdout: stdout, stderr: stderr, exit_status: status.exitstatus)
     end
 
     def get_command(*args)
