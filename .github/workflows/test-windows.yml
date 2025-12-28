@@ -222,6 +222,31 @@ jobs:
         Generated at: <%= Time.now %>
         "@ | Out-File -FilePath templates/hello.erb -Encoding utf8
 
+    - name: Inspect mitamae binary dependencies
+      run: |
+        $binary = ".\mitamae-build\mitamae-x86_64-windows.exe"
+        Write-Host "Binary: $binary"
+        if (Test-Path $binary) {
+          Get-Item $binary | Format-List *
+        } else {
+          Write-Host "Binary not found"
+          exit 1
+        }
+        $dumpbin = Get-Command dumpbin.exe -ErrorAction SilentlyContinue
+        if ($dumpbin) {
+          & $dumpbin.Source /DEPENDENTS $binary
+        } else {
+          Write-Host "dumpbin.exe not found"
+        }
+        foreach ($path in @("C:\vcpkg\installed\x64-windows\bin", "C:\vcpkg\installed\x86-windows\bin", "C:\oniguruma\windows-x86_64\bin")) {
+          if (Test-Path $path) {
+            Write-Host "DLLs in $path"
+            Get-ChildItem -Path $path -Filter *.dll | Select-Object -ExpandProperty Name
+          } else {
+            Write-Host "Missing path: $path"
+          }
+        }
+
     - name: Run comprehensive test recipe
       run: |
         .\mitamae-build\mitamae-x86_64-windows.exe local -l debug windows_test.rb 2>&1 | Tee-Object -FilePath windows_test.log
@@ -230,10 +255,10 @@ jobs:
           Write-Host "mitamae exit code: $exitCode"
           if (Test-Path windows_test.log) {
             Write-Host "windows_test.log size: $((Get-Item windows_test.log).Length) bytes"
+            Get-Content windows_test.log
           } else {
             Write-Host "windows_test.log not found"
           }
-          Get-Content windows_test.log
           exit $exitCode
         }
 

@@ -171,7 +171,7 @@ jobs:
         & $binary version
 
         # Test basic functionality
-        & $binary local -l error - << 'EOF'
+        $recipe = @'
         execute 'test echo' do
           command 'echo Basic functionality test'
         end
@@ -183,7 +183,8 @@ jobs:
         file 'C:\mitamae_build_test\build_test.txt' do
           content 'Build test successful'
         end
-        EOF
+        '@
+        $recipe | & $binary local -l error -
 
         # Clean up
         Remove-Item -Recurse -Force 'C:\mitamae_build_test' -ErrorAction SilentlyContinue
