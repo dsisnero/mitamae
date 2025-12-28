@@ -225,9 +225,17 @@ if MItamae.const_defined?(:WindowsPath)
       # Override File.expand_path for Windows
       def expand_path(path, dir = nil)
         if MItamae::WindowsPath.node && MItamae::WindowsPath.windows?
-          MItamae::WindowsPath.expand_path(path, dir)
+          if dir.nil?
+            MItamae::WindowsPath.expand_path(path)
+          else
+            MItamae::WindowsPath.expand_path(path, dir)
+          end
         else
-          original_expand_path(path, dir)
+          if dir.nil?
+            original_expand_path(path)
+          else
+            original_expand_path(path, dir)
+          end
         end
       end
     end
