@@ -35,9 +35,11 @@ module MItamae
       attr_reader :subscriptions
       attr_reader :resource_name
       attr_reader :recipe
+      attr_reader :variables
 
       def initialize(resource_name, recipe, variables = {}, &block)
         @recipe = recipe
+        @variables = variables
         @attributes = Hashie::Mash.new
         @resource_name = resource_name
         @verify_commands = []
@@ -48,6 +50,10 @@ module MItamae
         end
         process_attributes
         @attributes.freeze
+      end
+
+      def node
+        @variables[:node]
       end
 
       def resource_type

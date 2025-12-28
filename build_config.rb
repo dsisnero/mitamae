@@ -172,7 +172,6 @@ if build_targets.include?('windows-x86_64')
     conf.archiver.command = 'zig ar'
 
     # Windows-specific configuration
-    conf.build_mrbtest_lib_only
     conf.disable_libmrgss if conf.respond_to?(:disable_libmrgss)
     conf.disable_presym if conf.respond_to?(:disable_presym)
 
@@ -207,7 +206,6 @@ if build_targets.include?('windows-i386')
     conf.archiver.command = 'zig ar'
 
     # Windows-specific configuration
-    conf.build_mrbtest_lib_only
     conf.disable_libmrgss if conf.respond_to?(:disable_libmrgss)
     conf.disable_presym if conf.respond_to?(:disable_presym)
 

@@ -60,6 +60,10 @@ module MItamae
         end
       end
 
+      def node
+        @resource.node
+      end
+
       def run_action(action)
         MItamae.logger.debug "#{@resource.resource_type}[#{@resource.resource_name}] action: #{action}"
 

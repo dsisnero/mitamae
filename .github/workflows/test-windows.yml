@@ -246,6 +246,10 @@ jobs:
         if ($dumpbin) {
           $dumpbinPath = if ($dumpbin.Source) { $dumpbin.Source } else { $dumpbin.FullName }
           & $dumpbinPath /DEPENDENTS $binary
+          $yamlDll = "C:\vcpkg\installed\x64-windows\bin\yaml.dll"
+          if (Test-Path $yamlDll) {
+            & $dumpbinPath /DEPENDENTS $yamlDll
+          }
         } else {
           $objdump = Get-Command objdump.exe -ErrorAction SilentlyContinue
           if ($objdump) {
