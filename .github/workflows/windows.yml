@@ -79,11 +79,11 @@ jobs:
         if (Test-Path "C:\vcpkg\vcpkg.exe") {
           if ("${{ matrix.target }}" -eq "windows-x86_64") {
             C:\vcpkg\vcpkg.exe install pkgconf:x64-windows
-            C:\vcpkg\vcpkg.exe install libyaml:x64-windows-static
+            C:\vcpkg\vcpkg.exe install libyaml:x64-mingw-dynamic
             $toolsPath = "C:\vcpkg\installed\x64-windows\tools\pkgconf"
           } else {
             C:\vcpkg\vcpkg.exe install pkgconf:x86-windows
-            C:\vcpkg\vcpkg.exe install libyaml:x86-windows-static
+            C:\vcpkg\vcpkg.exe install libyaml:x86-mingw-dynamic
             $toolsPath = "C:\vcpkg\installed\x86-windows\tools\pkgconf"
           }
 
@@ -152,8 +152,8 @@ jobs:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
         ONIGURUMA_PREFIX: "C:/oniguruma/${{ matrix.target }}"
         VCPKG_ROOT: "C:/vcpkg"
-        VCPKG_TRIPLET: ${{ matrix.target == 'windows-x86_64' && 'x64-windows-static' || 'x86-windows-static' }}
-        PKG_CONFIG_PATH: "C:/oniguruma/${{ matrix.target }}/lib/pkgconfig;C:/vcpkg/installed/${{ matrix.target == 'windows-x86_64' && 'x64-windows-static' || 'x86-windows-static' }}/lib/pkgconfig"
+        VCPKG_TRIPLET: ${{ matrix.target == 'windows-x86_64' && 'x64-mingw-dynamic' || 'x86-mingw-dynamic' }}
+        PKG_CONFIG_PATH: "C:/oniguruma/${{ matrix.target }}/lib/pkgconfig;C:/vcpkg/installed/${{ matrix.target == 'windows-x86_64' && 'x64-mingw-dynamic' || 'x86-mingw-dynamic' }}/lib/pkgconfig"
       run: |
         # Create junction on same drive to shorten paths for Windows command line limits
         $currentDir = (Get-Location).Path
@@ -175,7 +175,7 @@ jobs:
     - name: Test binary
       run: |
         $binary = if ("${{ matrix.target }}" -eq "windows-x86_64") { "mitamae-build\mitamae-x86_64-windows.exe" } else { "mitamae-build\mitamae-i386-windows.exe" }
-        $vcpkgTriplet = if ("${{ matrix.target }}" -eq "windows-x86_64") { "x64-windows" } else { "x86-windows" }
+        $vcpkgTriplet = if ("${{ matrix.target }}" -eq "windows-x86_64") { "x64-mingw-dynamic" } else { "x86-mingw-dynamic" }
         $env:Path = "C:\vcpkg\installed\$vcpkgTriplet\bin;C:\oniguruma\${{ matrix.target }}\bin;$env:Path"
         $versionOutput = & $binary version 2>&1
         $versionExit = $LASTEXITCODE

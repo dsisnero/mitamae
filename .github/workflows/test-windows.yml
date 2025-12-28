@@ -74,7 +74,7 @@ jobs:
         # Use vcpkg to install pkgconf (provides pkg-config.exe)
         if (Test-Path "C:\vcpkg\vcpkg.exe") {
           C:\vcpkg\vcpkg.exe install pkgconf:x64-windows
-          C:\vcpkg\vcpkg.exe install libyaml:x64-windows-static
+          C:\vcpkg\vcpkg.exe install libyaml:x64-mingw-dynamic
           $toolsPath = "C:\vcpkg\installed\x64-windows\tools\pkgconf"
           if (Test-Path $toolsPath) {
             echo "$toolsPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
@@ -141,8 +141,8 @@ jobs:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
         ONIGURUMA_PREFIX: "C:/oniguruma/windows-x86_64"
         VCPKG_ROOT: "C:/vcpkg"
-        VCPKG_TRIPLET: x64-windows-static
-        PKG_CONFIG_PATH: "C:/oniguruma/windows-x86_64/lib/pkgconfig;C:/vcpkg/installed/x64-windows-static/lib/pkgconfig"
+        VCPKG_TRIPLET: x64-mingw-dynamic
+        PKG_CONFIG_PATH: "C:/oniguruma/windows-x86_64/lib/pkgconfig;C:/vcpkg/installed/x64-mingw-dynamic/lib/pkgconfig"
       run: |
         # Create junction on same drive to shorten paths for Windows command line limits
         $currentDir = (Get-Location).Path
@@ -226,7 +226,7 @@ jobs:
     - name: Inspect mitamae binary dependencies
       run: |
         $binary = ".\mitamae-build\mitamae-x86_64-windows.exe"
-        $env:Path = "C:\vcpkg\installed\x64-windows\bin;C:\oniguruma\windows-x86_64\bin;$env:Path"
+        $env:Path = "C:\vcpkg\installed\x64-mingw-dynamic\bin;C:\oniguruma\windows-x86_64\bin;$env:Path"
         Write-Host "Binary: $binary"
         if (Test-Path $binary) {
           Get-Item $binary | Format-List *
@@ -247,9 +247,12 @@ jobs:
         if ($dumpbin) {
           $dumpbinPath = if ($dumpbin.Source) { $dumpbin.Source } else { $dumpbin.FullName }
           & $dumpbinPath /DEPENDENTS $binary
-          $yamlDll = "C:\vcpkg\installed\x64-windows\bin\yaml.dll"
+          $yamlDll = "C:\vcpkg\installed\x64-mingw-dynamic\bin\libyaml.dll"
+          $yamlAltDll = "C:\vcpkg\installed\x64-mingw-dynamic\bin\yaml.dll"
           if (Test-Path $yamlDll) {
             & $dumpbinPath /DEPENDENTS $yamlDll
+          } elseif (Test-Path $yamlAltDll) {
+            & $dumpbinPath /DEPENDENTS $yamlAltDll
           }
         } else {
           $objdump = Get-Command objdump.exe -ErrorAction SilentlyContinue
@@ -260,7 +263,7 @@ jobs:
             Write-Host "objdump.exe not found"
           }
         }
-        foreach ($path in @("C:\vcpkg\installed\x64-windows\bin", "C:\vcpkg\installed\x86-windows\bin", "C:\oniguruma\windows-x86_64\bin")) {
+        foreach ($path in @("C:\vcpkg\installed\x64-mingw-dynamic\bin", "C:\vcpkg\installed\x86-mingw-dynamic\bin", "C:\oniguruma\windows-x86_64\bin")) {
           if (Test-Path $path) {
             Write-Host "DLLs in $path"
             Get-ChildItem -Path $path -Filter *.dll | Select-Object -ExpandProperty Name
@@ -271,7 +274,7 @@ jobs:
 
     - name: Run comprehensive test recipe
       run: |
-        $env:Path = "C:\vcpkg\installed\x64-windows\bin;C:\oniguruma\windows-x86_64\bin;$env:Path"
+        $env:Path = "C:\vcpkg\installed\x64-mingw-dynamic\bin;C:\oniguruma\windows-x86_64\bin;$env:Path"
         .\mitamae-build\mitamae-x86_64-windows.exe local -l debug windows_test.rb 2>&1 | Tee-Object -FilePath windows_test.log
         $exitCode = $LASTEXITCODE
         if ($exitCode -ne 0) {
