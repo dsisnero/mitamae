@@ -185,6 +185,19 @@ jobs:
           exit $versionExit
         }
 
+        $dumpDir = Join-Path (Get-Location) "mitamae-dumps"
+        New-Item -ItemType Directory -Force -Path $dumpDir | Out-Null
+        $procdump = Get-Command procdump.exe -ErrorAction SilentlyContinue
+        if (-not $procdump) {
+          choco install procdump -y --force
+          $procdump = Get-Command procdump.exe -ErrorAction SilentlyContinue
+        }
+        if ($procdump) {
+          $procdumpPath = if ($procdump.Source) { $procdump.Source } else { $procdump.FullName }
+        } else {
+          $procdumpPath = $null
+        }
+
         # Test basic functionality
         $recipe = @'
         execute 'test echo' do
@@ -199,7 +212,11 @@ jobs:
           content 'Build test successful'
         end
         '@
-        $recipe | & $binary local -l error - 2>&1 | Tee-Object -FilePath mitamae_build_test.log
+        if ($procdumpPath) {
+          $recipe | & $procdumpPath -accepteula -e -ma -x $dumpDir $binary local --shell cmd.exe -l error - 2>&1 | Tee-Object -FilePath mitamae_build_test.log
+        } else {
+          $recipe | & $binary local --shell cmd.exe -l error - 2>&1 | Tee-Object -FilePath mitamae_build_test.log
+        }
         $exitCode = $LASTEXITCODE
         if ($exitCode -ne 0) {
           Write-Host "mitamae test failed with exit code: $exitCode"
@@ -219,6 +236,13 @@ jobs:
       with:
         name: mitamae-${{ matrix.target }}
         path: mitamae-build/mitamae-*-windows*.exe
+
+    - name: Upload crash dumps
+      if: always() && hashFiles('mitamae-dumps/**') != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: mitamae-dumps-${{ matrix.target }}
+        path: mitamae-dumps
 
     - name: Save Zig cache
       if: always() && steps.cache-zig.outputs.cache-hit != 'true' && steps.setup-zig.outcome == 'success'

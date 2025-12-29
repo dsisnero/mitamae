@@ -275,7 +275,23 @@ jobs:
     - name: Run comprehensive test recipe
       run: |
         $env:Path = "C:\vcpkg\installed\x64-mingw-dynamic\bin;C:\oniguruma\windows-x86_64\bin;$env:Path"
-        .\mitamae-build\mitamae-x86_64-windows.exe local -l debug windows_test.rb 2>&1 | Tee-Object -FilePath windows_test.log
+        $dumpDir = Join-Path (Get-Location) "mitamae-dumps"
+        New-Item -ItemType Directory -Force -Path $dumpDir | Out-Null
+        $procdump = Get-Command procdump.exe -ErrorAction SilentlyContinue
+        if (-not $procdump) {
+          choco install procdump -y --force
+          $procdump = Get-Command procdump.exe -ErrorAction SilentlyContinue
+        }
+        if ($procdump) {
+          $procdumpPath = if ($procdump.Source) { $procdump.Source } else { $procdump.FullName }
+        } else {
+          $procdumpPath = $null
+        }
+        if ($procdumpPath) {
+          & $procdumpPath -accepteula -e -ma -x $dumpDir .\mitamae-build\mitamae-x86_64-windows.exe local --shell cmd.exe -l debug windows_test.rb 2>&1 | Tee-Object -FilePath windows_test.log
+        } else {
+          .\mitamae-build\mitamae-x86_64-windows.exe local --shell cmd.exe -l debug windows_test.rb 2>&1 | Tee-Object -FilePath windows_test.log
+        }
         $exitCode = $LASTEXITCODE
         if ($exitCode -ne 0) {
           Write-Host "mitamae exit code: $exitCode"
@@ -287,6 +303,13 @@ jobs:
           }
           exit $exitCode
         }
+
+    - name: Upload crash dumps
+      if: always() && hashFiles('mitamae-dumps/**') != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: mitamae-dumps-windows-test
+        path: mitamae-dumps
 
     - name: Verify test results
       run: |
