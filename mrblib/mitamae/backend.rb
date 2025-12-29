@@ -80,10 +80,10 @@ module MItamae
       spawn_opts = {}
       if user
         # Cannot emulate `:user` option without the shell. Fallback to the slow version.
-        command = [@shell, '-c', build_command(command, cwd: cwd, user: user)]
+        command = shell_command_args(build_command(command, cwd: cwd, user: user))
       else
         if command.is_a?(String)
-          command = [@shell, '-c', command]
+          command = shell_command_args(command)
         end
 
         if cwd
@@ -127,6 +127,18 @@ module MItamae
 
       _, status = Process.waitpid2(pid)
       [stdout, stderr, status]
+    end
+
+    def shell_command_args(command)
+      shell = @shell.to_s
+      shell_basename = File.basename(shell).downcase
+      if shell_basename == 'cmd.exe' || shell_basename == 'cmd'
+        [shell, '/c', command]
+      elsif shell_basename == 'powershell' || shell_basename == 'pwsh'
+        [shell, '-Command', command]
+      else
+        [shell, '-c', command]
+      end
     end
   end
 end

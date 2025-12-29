@@ -5,7 +5,7 @@ module MItamae
         node_jsons: [],
         node_yamls: [],
         dry_run:   false,
-        shell:     '/bin/sh',
+        shell:     nil,
         log_level: 'info',
         plugins:   './plugins',
         color:     true,
@@ -13,6 +13,7 @@ module MItamae
 
       def initialize(args)
         @options = DEFAULT_OPTIONS.dup
+        @options[:shell] = default_shell
         @recipe_paths = parse_options(args)
       end
 
@@ -53,6 +54,12 @@ module MItamae
         opt.on('--color')         { |v| @options[:color] = true }
         opt.on('--no-color')      { |v| @options[:color] = false }
         opt.parse!(args.dup)
+      end
+
+      def default_shell
+        return 'cmd.exe' if ENV['OS'] == 'Windows_NT'
+
+        '/bin/sh'
       end
     end
   end
