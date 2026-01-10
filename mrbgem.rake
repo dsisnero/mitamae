@@ -8,9 +8,20 @@ MRuby::Gem::Specification.new('mitamae') do |spec|
   spec.bins    = ['mitamae']
 
   disabled_gems = ENV.fetch('MITAMAE_DISABLE_GEMS', '').split(',').map(&:strip).reject(&:empty?)
+  if ENV['MITAMAE_GEM_DEBUG'] && !ENV['MITAMAE_GEM_DEBUG'].empty?
+    $stderr.puts "MITAMAE_GEM_DEBUG: disabled_gems=#{disabled_gems.join(',')}"
+  end
   add_dep = lambda do |name, **opts|
-    return if disabled_gems.include?(name)
+    if disabled_gems.include?(name)
+      if ENV['MITAMAE_GEM_DEBUG'] && !ENV['MITAMAE_GEM_DEBUG'].empty?
+        $stderr.puts "MITAMAE_GEM_DEBUG: skipping #{name}"
+      end
+      return
+    end
 
+    if ENV['MITAMAE_GEM_DEBUG'] && !ENV['MITAMAE_GEM_DEBUG'].empty?
+      $stderr.puts "MITAMAE_GEM_DEBUG: adding #{name}"
+    end
     spec.add_dependency name, **opts
   end
 
