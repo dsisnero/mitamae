@@ -8,7 +8,29 @@ def gem_disabled?(name)
   disabled_gems.include?(name)
 end
 
+def apply_disabled_gems_dependency_filter
+  return if disabled_gems.empty?
+
+  return if MRuby::Gem::Specification.method_defined?(:add_dependency_without_mitamae_disable)
+
+  MRuby::Gem::Specification.class_eval do
+    alias_method :add_dependency_without_mitamae_disable, :add_dependency
+
+    def add_dependency(name, *requirements)
+      disabled = ENV.fetch('MITAMAE_DISABLE_GEMS', '').split(',').map(&:strip).reject(&:empty?)
+      if disabled.include?(name)
+        if ENV['MITAMAE_GEM_DEBUG'] && !ENV['MITAMAE_GEM_DEBUG'].empty?
+          $stderr.puts "MITAMAE_GEM_DEBUG: skipping dependency #{name} for #{self.name}"
+        end
+        return
+      end
+      add_dependency_without_mitamae_disable(name, *requirements)
+    end
+  end
+end
+
 def gem_config(conf)
+  apply_disabled_gems_dependency_filter
   conf.gem __dir__
   if conf.respond_to?(:gems) && conf.gems.respond_to?(:delete_if)
     conf.gems.delete_if { |g| g.name == 'mruby-onig-regexp' }
