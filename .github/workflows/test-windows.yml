@@ -139,6 +139,7 @@ jobs:
     - name: Build mitamae
       env:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
+        MITAMAE_DEBUG_SYMBOLS: 1
         ONIGURUMA_PREFIX: "C:/oniguruma/windows-x86_64"
         VCPKG_ROOT: "C:/vcpkg"
         VCPKG_TRIPLET: x64-mingw-dynamic

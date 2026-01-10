@@ -15,6 +15,13 @@ def debug_config(conf)
   end
 end
 
+def debug_symbols_config(conf)
+  return unless ENV['MITAMAE_DEBUG_SYMBOLS'] && !ENV['MITAMAE_DEBUG_SYMBOLS'].empty?
+
+  conf.cc.flags << '-g'
+  conf.linker.flags << '-g'
+end
+
 def download_macos_sdk(path)
   version = '11.3'
   system('wget', "https://github.com/phracker/MacOSX-SDKs/releases/download/#{version}/MacOSX#{version}.sdk.tar.xz",
@@ -52,6 +59,7 @@ MRuby::Build.new do |conf|
   end
 
   debug_config(conf)
+  debug_symbols_config(conf)
   gem_config(conf)
   # Function is now static, no need for undefined reference flag
 end
@@ -66,6 +74,7 @@ if build_targets.include?('linux-x86_64')
     conf.archiver.command = 'zig ar'
 
     debug_config(conf)
+    debug_symbols_config(conf)
     gem_config(conf)
   end
 end
@@ -83,6 +92,7 @@ if build_targets.include?('linux-i386')
     conf.host_target = 'i386-pc-linux-gnu'
 
     debug_config(conf)
+    debug_symbols_config(conf)
     gem_config(conf)
   end
 end
@@ -100,6 +110,7 @@ if build_targets.include?('linux-armhf')
     conf.host_target = 'arm-linux-musleabihf'
 
     debug_config(conf)
+    debug_symbols_config(conf)
     gem_config(conf)
   end
 end
@@ -117,6 +128,7 @@ if build_targets.include?('linux-aarch64')
     conf.host_target = 'aarch64-linux-musl'
 
     debug_config(conf)
+    debug_symbols_config(conf)
     gem_config(conf)
   end
 end
@@ -138,6 +150,7 @@ if build_targets.include?('darwin-x86_64')
     conf.host_target = 'x86_64-darwin'
 
     debug_config(conf)
+    debug_symbols_config(conf)
     gem_config(conf)
   end
 end
@@ -159,6 +172,7 @@ if build_targets.include?('darwin-aarch64')
     conf.host_target = 'aarch64-darwin'
 
     debug_config(conf)
+    debug_symbols_config(conf)
     gem_config(conf)
   end
 end
