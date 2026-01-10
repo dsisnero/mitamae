@@ -19,7 +19,9 @@ def debug_symbols_config(conf)
   return unless ENV['MITAMAE_DEBUG_SYMBOLS'] && !ENV['MITAMAE_DEBUG_SYMBOLS'].empty?
 
   conf.cc.flags << '-g'
+  conf.cc.flags << '-gcodeview'
   conf.linker.flags << '-g'
+  conf.linker.flags << '-gcodeview'
 end
 
 def download_macos_sdk(path)
