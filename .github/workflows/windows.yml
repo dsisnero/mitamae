@@ -151,7 +151,7 @@ jobs:
       env:
         MRUBY_YAML_USE_SYSTEM_LIBRARY: 1
         MITAMAE_DEBUG_SYMBOLS: 1
-        MITAMAE_DISABLE_GEMS: "mruby-open3,mruby-shellwords,mruby-tempfile,mruby-erb,mruby-etc,mruby-process,mruby-specinfra"
+        MITAMAE_DISABLE_GEMS: "mruby-open3,mruby-shellwords,mruby-tempfile,mruby-erb,mruby-etc,mruby-process,mruby-specinfra,mruby-yaml"
         ONIGURUMA_PREFIX: "C:/oniguruma/${{ matrix.target }}"
         VCPKG_ROOT: "C:/vcpkg"
         VCPKG_TRIPLET: ${{ matrix.target == 'windows-x86_64' && 'x64-mingw-dynamic' || 'x86-mingw-dynamic' }}

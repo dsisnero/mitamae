@@ -1,12 +1,19 @@
 # frozen_string_literal: true
 
+def disabled_gems
+  @disabled_gems ||= ENV.fetch('MITAMAE_DISABLE_GEMS', '').split(',').map(&:strip).reject(&:empty?)
+end
+
+def gem_disabled?(name)
+  disabled_gems.include?(name)
+end
+
 def gem_config(conf)
   conf.gem __dir__
   if conf.respond_to?(:gems) && conf.gems.respond_to?(:delete_if)
     conf.gems.delete_if { |g| g.name == 'mruby-onig-regexp' }
-    disabled = ENV.fetch('MITAMAE_DISABLE_GEMS', '').split(',').map(&:strip).reject(&:empty?)
-    if disabled.any?
-      conf.gems.delete_if { |g| disabled.include?(g.name) }
+    if disabled_gems.any?
+      conf.gems.delete_if { |g| disabled_gems.include?(g.name) }
     end
   end
 end
@@ -47,7 +54,8 @@ MRuby::Build.new do |conf|
   # conf.enable_bintest
   # conf.enable_debug
   # conf.enable_test
-  if ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'] && !ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'].empty?
+  if ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'] && !ENV['MRUBY_YAML_USE_SYSTEM_LIBRARY'].empty? &&
+     !gem_disabled?('mruby-yaml')
     vcpkg_root = ENV.fetch('VCPKG_ROOT', 'C:/vcpkg')
     default_triplet = build_targets.include?('windows-i386') ? 'x86-windows' : 'x64-windows'
     triplet = ENV.fetch('VCPKG_TRIPLET', default_triplet)
@@ -205,7 +213,7 @@ if build_targets.include?('windows-x86_64')
       triplet = ENV.fetch('VCPKG_TRIPLET', 'x64-windows')
       conf.cc.include_paths << "#{vcpkg_root}/installed/#{triplet}/include"
       conf.linker.library_paths << "#{vcpkg_root}/installed/#{triplet}/lib"
-      conf.linker.libraries << 'yaml'
+      conf.linker.libraries << 'yaml' unless gem_disabled?('mruby-yaml')
       conf.cc.flags << '-DYAML_DECLARE_STATIC' if triplet.end_with?('-static')
     end
     if ENV['ONIGURUMA_PREFIX'] && !ENV['ONIGURUMA_PREFIX'].empty?
@@ -240,7 +248,7 @@ if build_targets.include?('windows-i386')
       triplet = ENV.fetch('VCPKG_TRIPLET', 'x86-windows')
       conf.cc.include_paths << "#{vcpkg_root}/installed/#{triplet}/include"
       conf.linker.library_paths << "#{vcpkg_root}/installed/#{triplet}/lib"
-      conf.linker.libraries << 'yaml'
+      conf.linker.libraries << 'yaml' unless gem_disabled?('mruby-yaml')
       conf.cc.flags << '-DYAML_DECLARE_STATIC' if triplet.end_with?('-static')
     end
     if ENV['ONIGURUMA_PREFIX'] && !ENV['ONIGURUMA_PREFIX'].empty?
