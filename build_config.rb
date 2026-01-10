@@ -4,6 +4,10 @@ def gem_config(conf)
   conf.gem __dir__
   if conf.respond_to?(:gems) && conf.gems.respond_to?(:delete_if)
     conf.gems.delete_if { |g| g.name == 'mruby-onig-regexp' }
+    disabled = ENV.fetch('MITAMAE_DISABLE_GEMS', '').split(',').map(&:strip).reject(&:empty?)
+    if disabled.any?
+      conf.gems.delete_if { |g| disabled.include?(g.name) }
+    end
   end
 end
 
