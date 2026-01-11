@@ -40,6 +40,13 @@ def gem_config(conf)
   end
 end
 
+def windows_safe_cflags(conf)
+  [conf.cc, conf.linker].each do |cc|
+    cc.flags << '-fno-strict-aliasing'
+    cc.flags << '-fno-omit-frame-pointer'
+  end
+end
+
 def debug_config(conf)
   conf.instance_eval do
     # In `enable_debug`, use this for release build too.
@@ -226,6 +233,7 @@ if build_targets.include?('windows-x86_64')
     # Windows-specific configuration
     conf.disable_libmrgss if conf.respond_to?(:disable_libmrgss)
     conf.disable_presym if conf.respond_to?(:disable_presym)
+    windows_safe_cflags(conf)
 
     # To configure: mrbgems/mruby-yaml, k0kubun/mruby-onig-regexp
     conf.host_target = 'x86_64-w64-mingw32'
@@ -261,6 +269,7 @@ if build_targets.include?('windows-i386')
     # Windows-specific configuration
     conf.disable_libmrgss if conf.respond_to?(:disable_libmrgss)
     conf.disable_presym if conf.respond_to?(:disable_presym)
+    windows_safe_cflags(conf)
 
     # To configure: mrbgems/mruby-yaml, k0kubun/mruby-onig-regexp
     conf.host_target = 'i686-w64-mingw32'
