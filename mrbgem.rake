@@ -34,6 +34,7 @@ MRuby::Gem::Specification.new('mitamae') do |spec|
   add_dep.call 'mruby-kernel-ext',  core: 'mruby-kernel-ext'
   add_dep.call 'mruby-object-ext',  core: 'mruby-object-ext'
   add_dep.call 'mruby-print',       core: 'mruby-print'
+  add_dep.call 'mruby-sprintf',     core: 'mruby-sprintf'
   add_dep.call 'mruby-struct',      core: 'mruby-struct'
   add_dep.call 'mruby-symbol-ext',  core: 'mruby-symbol-ext'
 
