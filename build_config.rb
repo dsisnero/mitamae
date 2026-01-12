@@ -45,6 +45,7 @@ def windows_safe_cflags(conf)
     cc.flags << '-fno-strict-aliasing'
     cc.flags << '-fno-omit-frame-pointer'
   end
+  conf.cc.flags << '-O0'
 end
 
 def debug_config(conf)
