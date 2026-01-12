@@ -290,13 +290,13 @@ jobs:
         } else {
           $procdumpPath = $null
         }
-        if ($procdumpPath) {
-          & $procdumpPath -accepteula -e -ma -x $dumpDir .\mitamae-build\mitamae-x86_64-windows.exe local --shell cmd.exe -l debug windows_test.rb 2>&1 | Tee-Object -FilePath windows_test.log
-        } else {
-          .\mitamae-build\mitamae-x86_64-windows.exe local --shell cmd.exe -l debug windows_test.rb 2>&1 | Tee-Object -FilePath windows_test.log
-        }
+        .\mitamae-build\mitamae-x86_64-windows.exe local --shell cmd.exe -l debug windows_test.rb 2>&1 | Tee-Object -FilePath windows_test.log
         $exitCode = $LASTEXITCODE
         if ($exitCode -ne 0) {
+          if ($procdumpPath) {
+            Write-Host "mitamae failed; re-running under procdump to collect a dump."
+            & $procdumpPath -accepteula -e -ma -x $dumpDir .\mitamae-build\mitamae-x86_64-windows.exe local --shell cmd.exe -l debug windows_test.rb 2>&1 | Tee-Object -FilePath windows_test.log -Append
+          }
           Write-Host "mitamae exit code: $exitCode"
           if (Test-Path windows_test.log) {
             Write-Host "windows_test.log size: $((Get-Item windows_test.log).Length) bytes"

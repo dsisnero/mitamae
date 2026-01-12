@@ -193,15 +193,17 @@ jobs:
           $procdumpPath = $null
         }
 
-        if ($procdumpPath) {
-          $versionOutput = & $procdumpPath -accepteula -e -ma -x $dumpDir $binary version 2>&1
-        } else {
-          $versionOutput = & $binary version 2>&1
-        }
+        $versionOutput = & $binary version 2>&1
         $versionExit = $LASTEXITCODE
         Write-Host "mitamae version output:"
         $versionOutput
         if ($versionExit -ne 0) {
+          if ($procdumpPath) {
+            Write-Host "mitamae version failed; re-running under procdump to collect a dump."
+            $dumpOutput = & $procdumpPath -accepteula -e -ma -x $dumpDir $binary version 2>&1
+            Write-Host "procdump output:"
+            $dumpOutput
+          }
           Write-Host "mitamae version failed with exit code: $versionExit"
           exit $versionExit
         }
@@ -220,13 +222,13 @@ jobs:
           content 'Build test successful'
         end
         '@
-        if ($procdumpPath) {
-          $recipe | & $procdumpPath -accepteula -e -ma -x $dumpDir $binary local --shell cmd.exe -l error - 2>&1 | Tee-Object -FilePath mitamae_build_test.log
-        } else {
-          $recipe | & $binary local --shell cmd.exe -l error - 2>&1 | Tee-Object -FilePath mitamae_build_test.log
-        }
+        $recipe | & $binary local --shell cmd.exe -l error - 2>&1 | Tee-Object -FilePath mitamae_build_test.log
         $exitCode = $LASTEXITCODE
         if ($exitCode -ne 0) {
+          if ($procdumpPath) {
+            Write-Host "mitamae test failed; re-running under procdump to collect a dump."
+            $recipe | & $procdumpPath -accepteula -e -ma -x $dumpDir $binary local --shell cmd.exe -l error - 2>&1 | Tee-Object -FilePath mitamae_build_test.log -Append
+          }
           Write-Host "mitamae test failed with exit code: $exitCode"
           if (Test-Path mitamae_build_test.log) {
             Get-Content mitamae_build_test.log
