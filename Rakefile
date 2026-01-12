@@ -184,16 +184,67 @@ if Dir.exist?(mruby_root)
   # Apply command.rb patch (Windows response file support) only if not already patched
   if File.exist?(command_patch_file)
     content = File.read(command_patch_file)
-    unless content.include?('MRBC: Processing')
-      IO.popen([patch_cmd, '-p0', '-f'], 'w') do |io|
-        io.write(MRUBY_COMMAND_PATCH)
+    response_marker = "Tempfile.new(['mrbc', '.rsp'])"
+
+    if content.include?('def run(out, infiles, funcname, cdump: true, static: false)')
+      unless content.include?(response_marker)
+        mrbc_method = <<~'RUBY'
+          def run(out, infiles, funcname, cdump: true, static: false)
+            @command ||= @build.mrbcfile
+            infiles = [infiles].flatten
+            response_file = nil
+            if infiles.size > 100
+              response_file = ::Tempfile.new(['mrbc', '.rsp'])
+              infiles.each { |path| response_file.puts filename(path) }
+              response_file.close
+              infiles = ["@#{response_file.path}"]
+            end
+
+            begin
+              infiles.each_with_index do |f, i|
+                label = f.respond_to?(:relative_path) ? f.relative_path : f.to_s
+                _pp i == 0 ? "MRBC" : "", label, indent: 2
+              end
+              opt = @compile_options % {funcname: funcname}
+              opt << " -S" if cdump
+              opt << " -s" if static
+              cmd = %["#{filename @command}" #{opt} #{filename(infiles).map{|f| %["#{f}"]}.join(' ')}]
+              puts cmd if Rake.verbose
+              IO.popen(cmd, 'r') do |io|
+                out.puts io.read
+              end
+              # if mrbc execution fail, drop the file
+              unless $?.success?
+                rm_f out.path
+                fail "Command failed with status (#{$?.exitstatus}): [#{cmd[0,42]}...]"
+              end
+            ensure
+              response_file&.close!
+            end
+          end
+        RUBY
+
+        mrbc_method_regex = /def run\(out, infiles, funcname, cdump: true, static: false\)\n(?:.*\n)*?    end/
+        unless content.sub!(mrbc_method_regex, mrbc_method.rstrip)
+          raise "Failed to apply mruby command patch (3.4.0 layout)"
+        end
+        File.write(command_patch_file, content)
+        puts "DEBUG: Applied mruby command patch for 3.4.0 layout"
+      else
+        puts "DEBUG: mruby command patch already applied, skipping"
       end
-      unless $?.success?
-        raise "Failed to apply mruby command patch"
-      end
-      puts "DEBUG: Applied mruby command patch"
     else
-      puts "DEBUG: mruby command patch already applied, skipping"
+      unless content.include?(response_marker)
+        IO.popen([patch_cmd, '-p0', '-f'], 'w') do |io|
+          io.write(MRUBY_COMMAND_PATCH)
+        end
+        unless $?.success?
+          raise "Failed to apply mruby command patch"
+        end
+        puts "DEBUG: Applied mruby command patch"
+      else
+        puts "DEBUG: mruby command patch already applied, skipping"
+      end
     end
   end
 
@@ -201,7 +252,7 @@ if Dir.exist?(mruby_root)
   patched_file = "#{mruby_root}/lib/mruby/build/command.rb"
   if File.exist?(patched_file)
     content = File.read(patched_file)
-    unless content.include?('MRBC: Processing')
+    unless content.include?("Tempfile.new(['mrbc', '.rsp'])")
       raise "Patch verification failed: command.rb not properly patched"
     end
     # Patch mrbc.c to support @response files
