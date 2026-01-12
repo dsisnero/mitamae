@@ -3,7 +3,7 @@
 require 'fileutils'
 require 'shellwords'
 
-MRUBY_VERSION = '3.0.0'
+MRUBY_VERSION = '3.4.0'
 
 MRUBY_BUILD_PATCH = <<~'PATCH'
   --- mruby/lib/mruby/build.rb  2021-03-05 00:07:35.000000000 -0800
@@ -143,7 +143,7 @@ end
 Rake::Task[:mruby].invoke unless File.exist?("#{mruby_root}/Rakefile")
 
 # Apply patches to mruby source code (fixes for Windows command line length)
-if MRUBY_VERSION == '3.0.0' && Dir.exist?(mruby_root)
+if Dir.exist?(mruby_root)
   puts "DEBUG: Applying mruby patches for version #{MRUBY_VERSION}"
   patch_cmd = RUBY_PLATFORM.include?('solaris') ? 'gpatch' : 'patch'
 
