@@ -232,6 +232,7 @@ if build_targets.include?('windows-x86_64')
     conf.archiver.command = 'zig ar'
 
     # Windows-specific configuration
+    conf.cc.flags << '-DMRB_NO_DIRECT_THREADING'
     conf.disable_libmrgss if conf.respond_to?(:disable_libmrgss)
     conf.disable_presym if conf.respond_to?(:disable_presym)
     windows_safe_cflags(conf)
