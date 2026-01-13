@@ -2,7 +2,6 @@
 
 require 'fileutils'
 require 'shellwords'
-require 'tmpdir'
 
 MRUBY_VERSION = '3.4.0'
 
@@ -143,37 +142,6 @@ if Dir.exist?(mruby_root) && !File.exist?("#{mruby_root}/Rakefile")
 end
 Rake::Task[:mruby].invoke unless File.exist?("#{mruby_root}/Rakefile")
 
-# Ensure mruby-print exists for mruby versions that no longer ship it as a core gem.
-def ensure_mruby_print(mruby_root)
-  print_dir = File.join(mruby_root, 'mrbgems', 'mruby-print')
-  return if Dir.exist?(print_dir)
-
-  puts "DEBUG: mruby-print missing; downloading external gem"
-  Dir.mktmpdir('mruby-print') do |dir|
-    tar_path = File.join(dir, 'mruby-print.tar.gz')
-    urls = [
-      'https://github.com/mruby/mruby-print/archive/refs/heads/main.tar.gz',
-      'https://github.com/mruby/mruby-print/archive/refs/heads/master.tar.gz',
-    ]
-    fetched = urls.any? do |url|
-      system(
-        'curl', '-L', '--fail', '--retry', '3', '--retry-delay', '1',
-        url,
-        '-o', tar_path
-      )
-    end
-    raise 'Failed to download mruby-print tarball' unless fetched
-    system('tar', 'xf', tar_path, '-C', dir, exception: true)
-    extracted = Dir.glob(File.join(dir, 'mruby-print-*')).find { |path| File.directory?(path) }
-    raise 'Failed to extract mruby-print tarball' unless extracted
-
-    FileUtils.mkdir_p(File.join(mruby_root, 'mrbgems'))
-    FileUtils.rm_rf(print_dir)
-    FileUtils.mv(extracted, print_dir)
-  end
-end
-
-ensure_mruby_print(mruby_root) if Dir.exist?(mruby_root)
 
 # Apply patches to mruby source code (fixes for Windows command line length)
 if Dir.exist?(mruby_root)
