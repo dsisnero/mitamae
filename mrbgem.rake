@@ -37,7 +37,7 @@ MRuby::Gem::Specification.new('mitamae') do |spec|
   add_dep.call 'mruby-struct',      core: 'mruby-struct'
   add_dep.call 'mruby-symbol-ext',  core: 'mruby-symbol-ext'
 
-  add_dep.call 'mruby-at_exit',     mgem: 'mruby-at_exit'
+  add_dep.call 'mruby-at_exit',     github: 'ksss/mruby-at_exit', branch: 'master'
   add_dep.call 'mruby-dir',         mgem: 'mruby-dir'
   add_dep.call 'mruby-dir-glob',    mgem: 'mruby-dir-glob'
   add_dep.call 'mruby-env',         mgem: 'mruby-env'
