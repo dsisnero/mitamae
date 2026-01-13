@@ -33,15 +33,7 @@ MRuby::Gem::Specification.new('mitamae') do |spec|
   add_dep.call 'mruby-io',          core: 'mruby-io'
   add_dep.call 'mruby-kernel-ext',  core: 'mruby-kernel-ext'
   add_dep.call 'mruby-object-ext',  core: 'mruby-object-ext'
-  print_core_path = nil
-  if defined?(MRuby::Source) && MRuby::Source::ROOT.respond_to?(:join)
-    print_core_path = MRuby::Source::ROOT.join('mrbgems', 'mruby-print', 'mrbgem.rake')
-  end
-  if print_core_path && print_core_path.exist?
-    add_dep.call 'mruby-print',     core: 'mruby-print'
-  else
-    add_dep.call 'mruby-print',     mgem: 'mruby-print'
-  end
+  add_dep.call 'mruby-print',       core: 'mruby-print'
   add_dep.call 'mruby-sprintf',     core: 'mruby-sprintf'
   add_dep.call 'mruby-struct',      core: 'mruby-struct'
   add_dep.call 'mruby-symbol-ext',  core: 'mruby-symbol-ext'
