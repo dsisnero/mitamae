@@ -33,7 +33,14 @@ MRuby::Gem::Specification.new('mitamae') do |spec|
   add_dep.call 'mruby-io',          core: 'mruby-io'
   add_dep.call 'mruby-kernel-ext',  core: 'mruby-kernel-ext'
   add_dep.call 'mruby-object-ext',  core: 'mruby-object-ext'
-  add_dep.call 'mruby-print',       core: 'mruby-print', mgem: 'mruby-print'
+  use_print_mgem = defined?(MRuby::Source) &&
+    (MRuby::Source::MRUBY_RELEASE_MAJOR > 3 ||
+      (MRuby::Source::MRUBY_RELEASE_MAJOR == 3 && MRuby::Source::MRUBY_RELEASE_MINOR >= 4))
+  if use_print_mgem
+    add_dep.call 'mruby-print',     mgem: 'mruby-print'
+  else
+    add_dep.call 'mruby-print',     core: 'mruby-print'
+  end
   add_dep.call 'mruby-sprintf',     core: 'mruby-sprintf'
   add_dep.call 'mruby-struct',      core: 'mruby-struct'
   add_dep.call 'mruby-symbol-ext',  core: 'mruby-symbol-ext'
