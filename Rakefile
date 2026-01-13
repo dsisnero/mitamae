@@ -151,12 +151,18 @@ def ensure_mruby_print(mruby_root)
   puts "DEBUG: mruby-print missing; downloading external gem"
   Dir.mktmpdir('mruby-print') do |dir|
     tar_path = File.join(dir, 'mruby-print.tar.gz')
-    system(
-      'curl', '-L', '--fail', '--retry', '3', '--retry-delay', '1',
+    urls = [
+      'https://github.com/mruby/mruby-print/archive/refs/heads/main.tar.gz',
       'https://github.com/mruby/mruby-print/archive/refs/heads/master.tar.gz',
-      '-o', tar_path,
-      exception: true
-    )
+    ]
+    fetched = urls.any? do |url|
+      system(
+        'curl', '-L', '--fail', '--retry', '3', '--retry-delay', '1',
+        url,
+        '-o', tar_path
+      )
+    end
+    raise 'Failed to download mruby-print tarball' unless fetched
     system('tar', 'xf', tar_path, '-C', dir, exception: true)
     extracted = Dir.glob(File.join(dir, 'mruby-print-*')).find { |path| File.directory?(path) }
     raise 'Failed to extract mruby-print tarball' unless extracted
