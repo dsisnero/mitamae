@@ -40,7 +40,7 @@ MRuby::Gem::Specification.new('mitamae') do |spec|
   if print_core_path && print_core_path.exist?
     add_dep.call 'mruby-print',     core: 'mruby-print'
   else
-    add_dep.call 'mruby-print',     github: 'mruby/mruby-print'
+    add_dep.call 'mruby-print',     mgem: 'mruby-print'
   end
   add_dep.call 'mruby-sprintf',     core: 'mruby-sprintf'
   add_dep.call 'mruby-struct',      core: 'mruby-struct'
