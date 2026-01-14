@@ -249,6 +249,35 @@ if Dir.exist?(mruby_root)
     end
   end
 
+  presym_patch_file = "#{mruby_root}/tasks/presym.rake"
+  if File.exist?(presym_patch_file)
+    content = File.read(presym_patch_file)
+    unless content.include?('Rake.application.lookup')
+      content = content.sub(
+        "all_prerequisites = ->(task_name, prereqs) do\n" \
+        "  Rake::Task[task_name].prerequisites.each do |prereq_name|\n" \
+        "    next if prereqs[prereq_name]\n" \
+        "    prereqs[prereq_name] = true\n" \
+        "    all_prerequisites.(Rake::Task[prereq_name].name, prereqs)\n" \
+        "  end\n" \
+        "end\n",
+        "all_prerequisites = ->(task_name, prereqs) do\n" \
+        "  task = Rake.application.lookup(task_name)\n" \
+        "  return unless task\n" \
+        "  task.prerequisites.each do |prereq_name|\n" \
+        "    next if prereqs[prereq_name]\n" \
+        "    prereqs[prereq_name] = true\n" \
+        "    all_prerequisites.(prereq_name, prereqs)\n" \
+        "  end\n" \
+        "end\n"
+      )
+      File.write(presym_patch_file, content)
+      puts "DEBUG: Applied presym task guard patch"
+    else
+      puts "DEBUG: presym task guard already applied, skipping"
+    end
+  end
+
   # Verify patch applied
   patched_file = "#{mruby_root}/lib/mruby/build/command.rb"
   if File.exist?(patched_file)
