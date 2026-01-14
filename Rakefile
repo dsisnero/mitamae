@@ -252,15 +252,9 @@ if Dir.exist?(mruby_root)
   presym_patch_file = "#{mruby_root}/tasks/presym.rake"
   if File.exist?(presym_patch_file)
     content = File.read(presym_patch_file)
-    unless content.include?('Rake.application.lookup')
+    if content.include?('Rake::Task[task_name]')
       content = content.sub(
-        "all_prerequisites = ->(task_name, prereqs) do\n" \
-        "  Rake::Task[task_name].prerequisites.each do |prereq_name|\n" \
-        "    next if prereqs[prereq_name]\n" \
-        "    prereqs[prereq_name] = true\n" \
-        "    all_prerequisites.(Rake::Task[prereq_name].name, prereqs)\n" \
-        "  end\n" \
-        "end\n",
+        /all_prerequisites\s*=\s*->\(task_name,\s*prereqs\)\s*do.*?^end\s*$/m,
         "all_prerequisites = ->(task_name, prereqs) do\n" \
         "  task = Rake.application.lookup(task_name)\n" \
         "  return unless task\n" \
