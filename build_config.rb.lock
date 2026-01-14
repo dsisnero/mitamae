@@ -1,111 +1,111 @@
 ---
 mruby:
-  version: 3.0.0
-  release_no: 30000
+  version: 3.4.0
+  release_no: 30400
 builds:
   host:
     https://github.com/ksss/mruby-at_exit.git:
       url: https://github.com/ksss/mruby-at_exit.git
-      branch: HEAD
+      branch: master
       commit: '09af1ecdce7b39582023c7614f8305386ee4d789'
       version: 0.0.0
     https://github.com/iij/mruby-dir.git:
       url: https://github.com/iij/mruby-dir.git
-      branch: HEAD
+      branch: master
       commit: 89dceefa1250fb1ae868d4cb52498e9e24293cd1
       version: 0.0.0
     https://github.com/gromnitsky/mruby-dir-glob.git:
       url: https://github.com/gromnitsky/mruby-dir-glob.git
-      branch: HEAD
+      branch: master
       commit: 334c040a2e2c4c2689f8c3440168011f64d57ada
       version: 0.0.1
     https://github.com/iij/mruby-env.git:
       url: https://github.com/iij/mruby-env.git
-      branch: HEAD
+      branch: master
       commit: 056ae324451ef16a50c7887e117f0ea30921b71b
       version: 0.0.0
     https://github.com/ksss/mruby-file-stat.git:
       url: https://github.com/ksss/mruby-file-stat.git
-      branch: HEAD
+      branch: master
       commit: f3e858f01361b9b4a8e77ada52470068630c9530
       version: 0.0.0
     https://github.com/k0kubun/mruby-hashie.git:
       url: https://github.com/k0kubun/mruby-hashie.git
-      branch: HEAD
+      branch: master
       commit: 381741184e3382ebfa9aa40e6f02645494874df3
       version: 0.0.0
     https://github.com/mattn/mruby-json.git:
       url: https://github.com/mattn/mruby-json.git
-      branch: HEAD
+      branch: master
       commit: f99d9428025469f2400f93c53b185f65f963e507
       version: 0.0.0
     https://github.com/dsisnero/mruby-open3.git:
       url: https://github.com/dsisnero/mruby-open3.git
-      branch: HEAD
+      branch: master
       commit: 7582582749464da1820153d66b5bfcf56051eab5
       version: 0.0.0
     https://github.com/fastly/mruby-optparse.git:
       url: https://github.com/fastly/mruby-optparse.git
-      branch: HEAD
+      branch: master
       commit: e6397a090d1efe04d5dab57c63897f0d79bbad89
       version: 0.0.0
     https://github.com/dsisnero/mruby-shellwords.git:
       url: https://github.com/dsisnero/mruby-shellwords.git
-      branch: HEAD
+      branch: master
       commit: 6ec80b6565ffea2457ed6570af0d1e9411f61bca
       version: 0.0.0
     https://github.com/dsisnero/mruby-specinfra.git:
       url: https://github.com/dsisnero/mruby-specinfra.git
-      branch: HEAD
+      branch: master
       commit: b48435719a8a3dd4aca1a2370d4b0d89d65c5096
       version: 0.0.0
     https://github.com/dsisnero/mruby-tempfile.git:
       url: https://github.com/dsisnero/mruby-tempfile.git
-      branch: HEAD
+      branch: master
       commit: 490f5a775f6405d706789c14e7029442ff08ebc7
       version: 0.0.0
     https://github.com/mrbgems/mruby-yaml.git:
       url: https://github.com/mrbgems/mruby-yaml.git
-      branch: HEAD
+      branch: master
       commit: 123010195bf621e784ee9d4ff9144a4b8e9cbb6a
       version: 0.1.0
     https://github.com/dsisnero/mruby-erb.git:
       url: https://github.com/dsisnero/mruby-erb.git
-      branch: HEAD
+      branch: master
       commit: 011d4d40b7ae7db0a95f7aa1258fadcda4d8d703
       version: 0.0.0
     https://github.com/dsisnero/mruby-etc.git:
       url: https://github.com/dsisnero/mruby-etc.git
-      branch: HEAD
+      branch: master
       commit: 7614fcad248006e34b964c5be87fdee76f7d3ed7
       version: 0.0.0
     https://github.com/zzak/mruby-uri.git:
       url: https://github.com/zzak/mruby-uri.git
-      branch: HEAD
+      branch: master
       commit: b3108ae56a48990eb7b79f44aca4ec76e1e60ad8
       version: 0.0.0
     https://github.com/tatsushid/mruby-schash.git:
       url: https://github.com/tatsushid/mruby-schash.git
-      branch: HEAD
+      branch: master
       commit: c8470d4be2404b4cfbb8011daebc2ca9bb1cdb80
       version: 0.0.0
     https://github.com/iij/mruby-errno.git:
       url: https://github.com/iij/mruby-errno.git
-      branch: HEAD
+      branch: master
       commit: b4415207ff6ea62360619c89a1cff83259dc4db0
       version: 0.0.0
     https://github.com/dsisnero/mruby-process.git:
       url: https://github.com/dsisnero/mruby-process.git
-      branch: HEAD
+      branch: master
       commit: 4cce4684a2e32e2c66dd31d2534b817407392701
       version: 0.0.0
     https://github.com/IceDragon200/mruby-catch-throw:
       url: https://github.com/IceDragon200/mruby-catch-throw
-      branch: HEAD
+      branch: master
       commit: 2b6eaff4232b4a9473b864df53c2917080af5dcf
       version: 1.1.0
     https://github.com/ksss/mruby-singleton.git:
       url: https://github.com/ksss/mruby-singleton.git
-      branch: HEAD
+      branch: master
       commit: 73dd4bae1a47d82e49b8f85bf27f49ec4462052e
       version: 0.0.0
